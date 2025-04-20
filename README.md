@@ -94,6 +94,7 @@ For a `(termint-define "myrepl" ...)` definition, the macro generates:
   - `termint-myrepl-end-pattern`
   - `termint-myrepl-str-process-func`
   - `termint-myrepl-source-func`
+  - `termint-myrepl-source-syntax`
 
 ## Examples
 
@@ -122,7 +123,7 @@ In the below example, we created two REPL schemas:
   :config
 
   (termint-define "ipython" "ipython" :bracketed-paste-p t
-                  :source-func #'termint--ipython-source-func)
+                  :source-syntax termint--ipython-source-syntax)
 
   ;; C-c m s: `termint-ipython-start'
   ;; C-c m r: `termint-ipython-send-region'
@@ -144,7 +145,7 @@ In the below example, we created two REPL schemas:
   :config
   (setq termint-backend 'eat)
   (termint-define "zsh" "zsh" :bracketed-paste-p t
-                  :source-func #'termint--bash-source-func))
+                  :source-syntax termint--bash-source-syntax))
 
 ```
 

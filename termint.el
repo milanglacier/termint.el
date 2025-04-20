@@ -139,7 +139,18 @@ at run time by setting the generated variable
 :source-func the function to source the code content to the REPL.  A
 common approach involves writing the input string to a temporary file,
 then returning a string that sources this file.  The exact \"sourcing\"
-syntax depends on the target programming language."
+syntax depends on the target programming language.
+
+:source-syntax: an alternative to `:source-func' that offers concise
+but less flexible syntax specification.  It expects a string formatted
+as follows (example for Python):
+
+exec(compile(open(\"{{file}}\", \"r\").read(), \"{{file}}\", \"exec\"))
+
+Where {{file}} represents the temporary file path.
+
+When both `:source-func' and `:source-syntax' are provided,
+`:source-syntax' takes precedence."
 
   (let ((start-func-name (intern (concat "termint-" repl-name "-start")))
         (send-region-func-name (intern (concat "termint-" repl-name "-send-region")))
@@ -154,9 +165,11 @@ syntax depends on the target programming language."
         (end-pattern (or (plist-get args :end-pattern) "\r"))
         (str-process-func (or (plist-get args :str-process-func) ''identity))
         (source-func (or (plist-get args :source-func) ''identity))
+        (source-syntax (plist-get args :source-syntax))
         (repl-cmd-name (intern (concat "termint-" repl-name "-cmd")))
         (str-process-func-name (intern (concat "termint-" repl-name "-str-process-func")))
         (source-func-name (intern (concat "termint-" repl-name "-source-func")))
+        (source-syntax-name (intern (concat "termint-" repl-name "-source-syntax")))
         (bracketed-paste-p-name (intern (concat "termint-" repl-name "-use-bracketed-paste-mode")))
         (start-pattern-name (intern (concat "termint-" repl-name "-start-pattern")))
         (end-pattern-name (intern (concat "termint-" repl-name "-end-pattern"))))
@@ -171,6 +184,9 @@ syntax depends on the target programming language."
 
        (defvar ,source-func-name ,source-func
          ,(format "The function to source the code content for the %s REPL." repl-name))
+
+       (defvar ,source-syntax-name ,source-syntax
+         ,(format "The syntax to source the code content for the %s REPL." repl-name))
 
        (defvar ,bracketed-paste-p-name ,bracketed-paste-p
          ,(format "Whether use bracketed paste mode for sending string to the %s REPL." repl-name))
@@ -215,7 +231,10 @@ With numeric prefix argument, send region to the process associated
 with that number." repl-name)
          (interactive "r\nP")
          (let* ((str (buffer-substring-no-properties beg end))
-                (str (funcall ,source-func-name str)))
+                (str (if ,source-syntax-name
+                         (let ((file (termint--make-tmp-file str)))
+                           (replace-regexp-in-string "{{file}}" file ,source-syntax-name))
+                       (funcall ,source-func-name str))))
            (,send-string-func-name str session)))
 
        (defun ,send-string-func-name (string &optional session)
@@ -310,36 +329,23 @@ Delete the temp file afterwards unless KEEP-FILE is non-nil."
     (unless keep-file (run-with-idle-timer 5 nil #'delete-file file))
     file))
 
+(defvar termint--python-source-syntax
+    "exec(compile(open(\"{{file}}\", \"r\").read(), \"{{file}}\", \"exec\"))"
+  "The syntax used to source code content into the Python REPL.
+Be aware that if you intend to use PDB with functions sourced from a
+temporary file, you should avoid deleting the temporary file.  In such
+scenarios, use `:source-func' instead of `:source-syntax', as
+`:source-syntax' will delete the temporary file.")
 
-(defun termint--python-source-func (str)
-  "Create a temporary file with STR and return a Python command to execute it."
-  (let ((file (termint--make-tmp-file str t)))
-    ;; Use 'compile' to ensure proper debugging context when using
-    ;; PDB's `list` command
-    (format "exec(compile(open(\"%s\", \"r\").read(), \"%s\", \"exec\"))"
-            file file)))
+(defvar termint--ipython-source-syntax
+    "%run -i \"{{file}}\""
+  "The syntax used to source code content into the iPython REPL.")
 
-(defun termint--ipython-source-func (str)
-  "Create a temporary file with STR and return a iPython command to execute it."
-  (let ((file (termint--make-tmp-file str t)))
-    ;; The `-i` flag ensures the current environment is inherited
-    ;; when executing the file
-    (format "%%run -i \"%s\"" file)))
+(defvar termint--R-source-syntax "eval(parse(text = readr::read_file(\"{{file}}\")))"
+    "The syntax used to source code content into the R REPL.")
 
-(defun termint--R-source-func (str)
-  "Create a temporary file with STR and return an R command to source it."
-  (let ((file (termint--make-tmp-file str)))
-    (format "eval(parse(text = readr::read_file(\"%s\")))" file)))
-
-(defun termint--bash-source-func (str)
-  "Create a temporary file with STR and return a Bash command to source it."
-  (let ((file (termint--make-tmp-file str)))
-    (format "source %s" file)))
-
-(defun termint--aichat-source-func (str)
-  "Create a temporary file with STR and return a aichat command to source it."
-  (let ((file (termint--make-tmp-file str)))
-    (format ".file \"%s\"" file)))
+(defvar termint--bash-source-syntax "source {{file}}"
+    "The syntax used to source code content into the Bash REPL.")
 
 (provide 'termint)
 ;;; termint.el ends here
