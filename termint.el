@@ -71,7 +71,7 @@
 
 
 (defun termint--start-vterm-backend (repl-buffer-name repl-shell arg)
-  "Start REPL-SHELL in REPL-BUFFER-NAME with numeric ARG with eat backend."
+  "Start REPL-SHELL in REPL-BUFFER-NAME with numeric ARG with vterm backend."
   (require 'vterm)
   (let ((vterm-buffer-name repl-buffer-name)
         (vterm-shell repl-shell))
