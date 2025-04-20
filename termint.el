@@ -348,23 +348,28 @@ Delete the temp file afterwards unless KEEP-FILE is non-nil."
     (unless keep-file (run-with-idle-timer 5 nil #'delete-file file))
     file))
 
-(defvar termint--python-source-syntax
+(defvar termint-python-source-syntax-template
   "exec(compile(open(\"{{file}}\", \"r\").read(), \"{{file}}\", \"exec\"))"
-  "The syntax used to source code content into the Python REPL.
+  "The template syntax used to source code content into the Python REPL.
 Be aware that if you intend to use PDB with functions sourced from a
 temporary file, you should avoid deleting the temporary file.  In such
 scenarios, use `:source-func' instead of `:source-syntax', as
 `:source-syntax' will delete the temporary file.")
 
-(defvar termint--ipython-source-syntax
+(defvar termint-ipython-source-syntax-template
   "%run -i \"{{file}}\""
-  "The syntax used to source code content into the iPython REPL.")
+  "The template syntax used to source code content into the iPython REPL.
+Be aware that if you intend to use PDB with functions sourced from a
+temporary file, you should avoid deleting the temporary file.  In such
+scenarios, use `:source-func' instead of `:source-syntax', as
+`:source-syntax' will delete the temporary file.")
 
-(defvar termint--R-source-syntax "eval(parse(text = readr::read_file(\"{{file}}\")))"
-  "The syntax used to source code content into the R REPL.")
+(defvar termint-R-source-syntax-template
+  "eval(parse(text = readr::read_file(\"{{file}}\")))"
+  "The template syntax used to source code content into the R REPL.")
 
-(defvar termint--bash-source-syntax "source {{file}}"
-  "The syntax used to source code content into the Bash REPL.")
+(defvar termint-bash-source-syntax-template "source {{file}}"
+  "The template syntax used to source code content into the Bash REPL.")
 
 (provide 'termint)
 ;;; termint.el ends here

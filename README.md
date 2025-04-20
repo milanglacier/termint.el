@@ -123,7 +123,7 @@ In the below example, we created two REPL schemas:
   :config
 
   (termint-define "ipython" "ipython" :bracketed-paste-p t
-                  :source-syntax termint--ipython-source-syntax)
+                  :source-syntax termint-ipython-source-syntax-template)
 
   ;; C-c m s: `termint-ipython-start'
   ;; C-c m r: `termint-ipython-send-region'
@@ -145,7 +145,7 @@ In the below example, we created two REPL schemas:
   :config
   (setq termint-backend 'eat)
   (termint-define "zsh" "zsh" :bracketed-paste-p t
-                  :source-syntax termint--bash-source-syntax))
+                  :source-syntax termint-bash-source-syntax-template))
 
 ```
 
