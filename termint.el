@@ -3,6 +3,7 @@
 ;; Author: Milan Glacier <dev@milanglacier.com>
 ;; Maintainer: Milan Glacier <dev@milanglacier.com>
 ;; Version: 0.1
+;; URL: https://github.com/milanglacier/termint.el
 ;; Package-Requires: ((emacs "29"))
 
 ;;; Commentary:
@@ -292,9 +293,7 @@ suffix." repl-name)
            (define-key map "e" #',send-string-func-name)
            (define-key map "h" #',hide-window-func-name)
            map)
-         ,(format "Keymap for %s REPL commands." repl-name))
-
-       )))
+         ,(format "Keymap for %s REPL commands." repl-name)))))
 
 (defun termint--make-tmp-file (str &optional keep-file)
   "Create a temporary file with STR.
