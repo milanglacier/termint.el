@@ -1,0 +1,9 @@
+.tags
+.DS_Store
+.aider*
+*.elc
+
+# ELPA-generated files
+/termint-autoloads.el
+/termint-pkg.el
+.ctags.d
