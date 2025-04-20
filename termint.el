@@ -330,7 +330,7 @@ Delete the temp file afterwards unless KEEP-FILE is non-nil."
     file))
 
 (defvar termint--python-source-syntax
-    "exec(compile(open(\"{{file}}\", \"r\").read(), \"{{file}}\", \"exec\"))"
+  "exec(compile(open(\"{{file}}\", \"r\").read(), \"{{file}}\", \"exec\"))"
   "The syntax used to source code content into the Python REPL.
 Be aware that if you intend to use PDB with functions sourced from a
 temporary file, you should avoid deleting the temporary file.  In such
@@ -338,14 +338,14 @@ scenarios, use `:source-func' instead of `:source-syntax', as
 `:source-syntax' will delete the temporary file.")
 
 (defvar termint--ipython-source-syntax
-    "%run -i \"{{file}}\""
+  "%run -i \"{{file}}\""
   "The syntax used to source code content into the iPython REPL.")
 
 (defvar termint--R-source-syntax "eval(parse(text = readr::read_file(\"{{file}}\")))"
-    "The syntax used to source code content into the R REPL.")
+  "The syntax used to source code content into the R REPL.")
 
 (defvar termint--bash-source-syntax "source {{file}}"
-    "The syntax used to source code content into the Bash REPL.")
+  "The syntax used to source code content into the Bash REPL.")
 
 (provide 'termint)
 ;;; termint.el ends here
