@@ -85,8 +85,8 @@ For a `(termint-define "myrepl" ...)` definition, the macro generates:
   - `termint-myrepl-send-region-operator`: Evil operator for sending.
   - `termint-myrepl-source-region-operator`: Evil operator for sourcing.
 - Keymap:
-  - `termint-myrepl-map`: A keymap with default bindingsYou can bind this map to
-    a prefix key.
+  - `termint-myrepl-map`: A keymap with default bindings. You can bind this map
+    to a prefix key.
 - Customizable Variables:
   - `termint-myrepl-cmd`
   - `termint-myrepl-use-bracketed-paste-mode`
@@ -206,6 +206,15 @@ temporary file handling—such as exposure to malicious attack—could pose secu
 risks. Thus, while beneficial in certain scenarios, this method requires careful
 consideration of its potential drawbacks.
 
+## Bracketed-Paste Mode
+
+Bracketed-paste mode wraps pasted text in escape sequences, letting terminals
+distinguish it from typed input. In `termint`, control it via
+`:bracketed-paste-p` in `termint-define`. This prevents REPLs from
+misinterpreting pasted newlines or special characters. Most modern REPLs support
+it, but some may not work perfectly. Test with your setup to confirm
+compatibility.
+
 ## Comparison with Other Approaches
 
 ### Emacs Built-in `comint`
@@ -213,12 +222,11 @@ consideration of its potential drawbacks.
 `comint-mode` is Emacs's standard way of interacting with inferior processes,
 including shells and REPLs.
 
-`comint` runs the process in a "dumb" process. This means it doesn't
-fully support complex terminal escape sequences for things like
-advanced color rendering, or features like bracketed paste mode
-(though some workarounds exist). This can lead to display glitches or
-less robust interaction with modern REPLs that expect a capable
-terminal.
+`comint` runs the process in a "dumb" process. This means it doesn't fully
+support complex terminal escape sequences for things like advanced color
+rendering, or features like bracketed paste mode (though some workarounds
+exist). This can lead to display glitches or less robust interaction with modern
+REPLs that expect a capable terminal.
 
 `termint` runs the REPL inside a _real_ terminal emulator backend (`term`,
 `vterm`, `eat`). This enables the REPL to function as it would in a standalone
