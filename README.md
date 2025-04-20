@@ -210,14 +210,15 @@ consideration of its potential drawbacks.
 
 ### Emacs Built-in `comint`
 
-comint-mode` is Emacs's standard way of interacting with inferior processes,
+`comint-mode` is Emacs's standard way of interacting with inferior processes,
 including shells and REPLs.
 
-`comint` runs the process in a "dumb" process provided by Emacs itself. This
-means it doesn't fully support complex terminal escape sequences for things like
-advanced color rendering, or features like bracketed paste mode (though some
-workarounds exist). This can lead to display glitches or less robust interaction
-with modern REPLs that expect a capable terminal.
+`comint` runs the process in a "dumb" process. This means it doesn't
+fully support complex terminal escape sequences for things like
+advanced color rendering, or features like bracketed paste mode
+(though some workarounds exist). This can lead to display glitches or
+less robust interaction with modern REPLs that expect a capable
+terminal.
 
 `termint` runs the REPL inside a _real_ terminal emulator backend (`term`,
 `vterm`, `eat`). This enables the REPL to function as it would in a standalone
