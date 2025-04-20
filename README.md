@@ -24,9 +24,9 @@ sessions, send code snippets, source files, and manage the REPL window.
 - Customizable Interaction: Control aspects like bracketed paste mode, start/end
   patterns for sending code (with different behaviour for single vs. multi-line
   input), and code preprocessing.
-- Code Sourcing: Provides a mechanism (`:source-func`) to source code, often by
-  writing to a temporary file and sending a command to source it (helpers
-  included for common languages).
+- Code Sourcing: Provides a mechanism (`:source-func` or `:source-syntax`) to
+  source code, often by writing to a temporary file and sending a command to
+  source it (helpers included for common languages).
 - Generated Commands: Automatically creates functions for:
   - Starting/switching to REPL sessions
   - Sending regions/strings
@@ -187,8 +187,8 @@ REPL.
   input, mimicking manual typing (or a copy-pasted input via bracketed-paste).
   This is suitable for interactive commands or a few lines code snippets
 
-- **Sourcing** utilizes the `:source-func` to manage the code execution. The
-  conventional pattern involves:
+- **Sourcing** utilizes the `:source-func` or `:source-syntax` to manage the
+  code execution. The conventional pattern involves:
 
   1.  Writing the code to a temporary file.
   2.  Sending a command to the REPL, instructing it to execute the contents of
