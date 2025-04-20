@@ -249,7 +249,11 @@ process with that number."
                                  (plist-get ,end-pattern-name :single-line))))
                 (final-string
                  (if multi-lines-p
-                     (concat start-pattern bracketed-paste-start string bracketed-paste-end end-pattern)
+                     (concat start-pattern
+                             (and ,bracketed-paste-p-name bracketed-paste-start)
+                             string
+                             (and ,bracketed-paste-p-name bracketed-paste-end)
+                             end-pattern)
                    (concat start-pattern string end-pattern))))
            (funcall send-string repl-buffer-name final-string)))
 
