@@ -155,10 +155,13 @@ to the REPL.  The default is `identity'.  You can change the behavior
 at run time by setting the generated variable
 `termint-REPL-NAME-str-process-func'.
 
-:source-func the function to source the code content to the REPL.  A
-common approach involves writing the input string to a temporary file,
-then returning a string that sources this file.  The exact \"sourcing\"
-syntax depends on the target programming language.
+:source-func: This function determines how code is sourced into the
+REPL.  It accepts a string representing the selected code region and
+returns a string.  Typically, this is achieved by writing the input
+code to a temporary file and constructing a command that sources the
+file.  The precise syntax for sourcing is language-specific.  By
+default, `:source-func' is set to `identity', which sends the input
+string directly to the REPL without creating a temporary file.
 
 :source-syntax: an alternative to `:source-func' that offers concise
 but less flexible syntax specification.  It expects a string formatted
