@@ -349,18 +349,20 @@ Delete the temp file afterwards unless KEEP-FILE is non-nil."
 (defvar termint-python-source-syntax-template
   "exec(compile(open(\"{{file}}\", \"r\").read(), \"{{file}}\", \"exec\"))"
   "The template syntax used to source code content into the Python REPL.
-Be aware that if you intend to use PDB with functions sourced from a
-temporary file, you should avoid deleting the temporary file.  In such
-scenarios, use `:source-func' instead of `:source-syntax', as
-`:source-syntax' will delete the temporary file.")
+If you plan to use PDB with functions sourced from a temporary file,
+ensure that the file is not deleted.  In these cases, pass
+`:source-syntax' as a function.  When the `:source-syntax' is supplied
+as a string, the temporary file will be automatically deleted
+afterward.")
 
 (defvar termint-ipython-source-syntax-template
   "%run -i \"{{file}}\""
   "The template syntax used to source code content into the iPython REPL.
-Be aware that if you intend to use PDB with functions sourced from a
-temporary file, you should avoid deleting the temporary file.  In such
-scenarios, use `:source-func' instead of `:source-syntax', as
-`:source-syntax' will delete the temporary file.")
+If you plan to use PDB with functions sourced from a temporary file,
+ensure that the file is not deleted.  In these cases, pass
+`:source-syntax' as a function.  When the `:source-syntax' is supplied
+as a string, the temporary file will be automatically deleted
+afterward.")
 
 (defvar termint-R-source-syntax-template
   "eval(parse(text = readr::read_file(\"{{file}}\")))"
