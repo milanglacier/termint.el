@@ -155,24 +155,24 @@ to the REPL.  The default is `identity'.  You can change the behavior
 at run time by setting the generated variable
 `termint-REPL-NAME-str-process-func'.
 
-:source-func: This function determines how code is sourced into the
-REPL.  It accepts a string representing the selected code region and
-returns a string.  Typically, this is achieved by writing the input
-code to a temporary file and constructing a command that sources the
-file.  The precise syntax for sourcing is language-specific.  By
-default, `:source-func' is set to `identity', which sends the input
-string directly to the REPL without creating a temporary file.
+:source-syntax: The function or syntax (specified as a string)
+that determines how code is sourced into the REPL.
 
-:source-syntax: an alternative to `:source-func' that offers concise
-but less flexible syntax specification.  It expects a string formatted
-as follows (example for Python):
+When provided as a function, it takes a string representing the
+selected code region and returns a string as the source syntax.  A
+common implementation involves writing the input code to a temporary
+file and generating a language-specific command to source that file.
+By default, `:source-syntax` uses the `identity` function, which
+directly transmits the input string to the REPL without file
+operations.
 
-exec(compile(open(\"{{file}}\", \"r\").read(), \"{{file}}\", \"exec\"))
+When specified as a string, it should represent the sourcing command
+in the target language.  For example, in Python:
 
-Where {{file}} represents the temporary file path.
+exec(compile(open(\"{{file}}\", \"r\").read(), \"{{file}}\",\"exec\"))
 
-When both `:source-func' and `:source-syntax' are provided,
-`:source-syntax' takes precedence."
+Use the string format for concise configuration, or the function
+variant for greater flexibility and control."
 
   (let ((start-func-name (intern (concat "termint-" repl-name "-start")))
         (send-region-func-name (intern (concat "termint-" repl-name "-send-region")))
@@ -186,11 +186,9 @@ When both `:source-func' and `:source-syntax' are provided,
         (start-pattern (or (plist-get args :start-pattern) ""))
         (end-pattern (or (plist-get args :end-pattern) "\r"))
         (str-process-func (or (plist-get args :str-process-func) ''identity))
-        (source-func (or (plist-get args :source-func) ''identity))
-        (source-syntax (plist-get args :source-syntax))
+        (source-syntax (or (plist-get args :source-syntax) ''identity))
         (repl-cmd-name (intern (concat "termint-" repl-name "-cmd")))
         (str-process-func-name (intern (concat "termint-" repl-name "-str-process-func")))
-        (source-func-name (intern (concat "termint-" repl-name "-source-func")))
         (source-syntax-name (intern (concat "termint-" repl-name "-source-syntax")))
         (bracketed-paste-p-name (intern (concat "termint-" repl-name "-use-bracketed-paste-mode")))
         (start-pattern-name (intern (concat "termint-" repl-name "-start-pattern")))
@@ -203,9 +201,6 @@ When both `:source-func' and `:source-syntax' are provided,
 
        (defvar ,str-process-func-name ,str-process-func
          ,(format "The function to process the string before sending it to the %s REPL." repl-name))
-
-       (defvar ,source-func-name ,source-func
-         ,(format "The function to source the code content for the %s REPL." repl-name))
 
        (defvar ,source-syntax-name ,source-syntax
          ,(format "The syntax to source the code content for the %s REPL." repl-name))
@@ -253,10 +248,10 @@ With numeric prefix argument, send region to the process associated
 with that number." repl-name)
          (interactive "r\nP")
          (let* ((str (buffer-substring-no-properties beg end))
-                (str (if ,source-syntax-name
+                (str (if (stringp ,source-syntax-name)
                          (let ((file (termint--make-tmp-file str)))
                            (replace-regexp-in-string "{{file}}" file ,source-syntax-name))
-                       (funcall ,source-func-name str))))
+                       (funcall ,source-syntax-name str))))
            (,send-string-func-name str session)))
 
        (defun ,send-string-func-name (string &optional session)
