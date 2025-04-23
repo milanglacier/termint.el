@@ -110,13 +110,12 @@ name."
      start-pattern
      end-pattern
      bracketed-paste-p
-     str-process-func
-     source-syntax)
+     str-process-func)
   "Send STRING to a REPL.
 The target REPL buffer is specified by REPL-NAME and SESSION.
 Additional parameters—START-PATTERN, END-PATTERN, BRACKETED-PASTE-P,
-STR-PROCESS-FUNC, and SOURCE-SYNTAX—are variables associated with
-REPL-NAME, initialized during each `termint-define' call."
+and STR-PROCESS-FUNC—are variables associated with REPL-NAME,
+initialized during each `termint-define' call."
   (let* ((repl-buffer-name
           (if session
               (format "*%s*<%d>" repl-name session)
@@ -319,8 +318,7 @@ process with that number."
                                ,start-pattern-name
                                ,end-pattern-name
                                ,bracketed-paste-p-name
-                               ,str-process-func-name
-                               ,source-syntax-name))
+                               ,str-process-func-name))
 
        (when (require 'evil nil t)
          (evil-define-operator ,send-region-operator-name (beg end session)
