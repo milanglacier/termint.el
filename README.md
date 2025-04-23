@@ -37,6 +37,20 @@ sessions, send code snippets, source files, and manage the REPL window.
 - Dedicated Keymap: Creates a prefix keymap for easy access to the generated
   commands.
 
+# Installation
+
+This package is currently available only through Git. Install it using
+one of the following methods:
+
+```emacs-lisp
+(use-package termint
+    :vc (:url "https://github.com/milanglacier/termint.el"
+         :rev :newest))
+
+;; or use straight
+(straight-use-package '(termint :host github :repo "milanglacier/termint.el"))
+```
+
 # Configuration
 
 Choose your preferred terminal backend by customizing the `termint-backend`
@@ -208,12 +222,13 @@ consideration of its potential drawbacks.
 
 ## Bracketed-Paste Mode
 
-Bracketed-paste mode wraps pasted text in escape sequences, letting terminals
-distinguish it from typed input. In `termint`, control it via
-`:bracketed-paste-p` in `termint-define`. This prevents REPLs from
-misinterpreting pasted newlines or special characters. Most modern REPLs support
-it, but some may not work perfectly. Test with your setup to confirm
-compatibility.
+Bracketed-paste mode wraps pasted text in escape sequences, letting
+terminals distinguish it from typed input. In `termint`, control it
+via `:bracketed-paste-p` in `termint-define`. This prevents REPLs from
+misinterpreting pasted newlines or special characters. Most modern
+REPLs support it, making `:bracketed-paste-p t` a generally
+recommended setting, but some may not work perfectly. Test with your
+setup to confirm compatibility.
 
 ## Comparison with Other Approaches
 
