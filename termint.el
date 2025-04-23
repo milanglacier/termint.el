@@ -192,6 +192,19 @@ The target REPL buffer is specified by REPL-NAME and ARG."
               (buffer-window (get-buffer-window buf)))
     (delete-window buffer-window)))
 
+(defun termint--create-source-command (str source-syntax)
+  "Create the \"source\" to send to REPL.
+STR contains the selected code content to be processed. The
+SOURCE-SYNTAX is the `termint-REPL-NAME-source-syntax' associated with
+REPL-NAME."
+  (if (stringp source-syntax)
+      (let ((file (termint--make-tmp-file str)))
+        (replace-regexp-in-string "{{file}}" file source-syntax))
+    (funcall source-syntax str)))
+
+
+
+
 
 
 (defmacro termint-define (repl-name repl-cmd &rest args)
@@ -318,10 +331,7 @@ With numeric prefix argument, send region to the process associated
 with that number." repl-name)
          (interactive "r\nP")
          (let* ((str (buffer-substring-no-properties beg end))
-                (str (if (stringp ,source-syntax-name)
-                         (let ((file (termint--make-tmp-file str)))
-                           (replace-regexp-in-string "{{file}}" file ,source-syntax-name))
-                       (funcall ,source-syntax-name str))))
+                (str (termint--create-source-command str ,source-syntax-name)))
            (,send-string-func-name str session)))
 
        (defun ,send-string-func-name (string &optional session)
