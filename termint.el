@@ -103,6 +103,51 @@ name."
       ('term
        (termint--start-term-backend repl-buffer-name repl-shell arg)))))
 
+(defun termint--send-string
+    (string
+     repl-name
+     session
+     start-pattern
+     end-pattern
+     bracketed-paste-p
+     str-process-func
+     source-syntax)
+  "Send STRING to a REPL.
+The target REPL buffer is specified by REPL-NAME and SESSION.
+Additional parameters—START-PATTERN, END-PATTERN, BRACKETED-PASTE-P,
+STR-PROCESS-FUNC, and SOURCE-SYNTAX—are variables associated with
+REPL-NAME, initialized during each `termint-define' call."
+  (let* ((repl-buffer-name
+          (if session
+              (format "*%s*<%d>" repl-name session)
+            (format "*%s*" repl-name)))
+         (send-string
+          (pcase termint-backend
+            ('eat #'termint--send-string-eat-backend)
+            ('vterm #'termint--send-string-vterm-backend)
+            ('term #'termint--send-string-term-backend)))
+         (multi-lines-p (string-match-p "\n" string))
+         (bracketed-paste-start "\e[200~")
+         (bracketed-paste-end "\e[201~")
+         (string (funcall str-process-func string))
+         (start-pattern (if (stringp start-pattern) start-pattern
+                          (if multi-lines-p
+                              (plist-get start-pattern :multi-lines)
+                            (plist-get start-pattern :single-line))))
+         (end-pattern (if (stringp end-pattern) end-pattern
+                        (if multi-lines-p
+                            (plist-get end-pattern :multi-lines)
+                          (plist-get end-pattern :single-line))))
+         (final-string
+          (if multi-lines-p
+              (concat start-pattern
+                      (and bracketed-paste-p bracketed-paste-start)
+                      string
+                      (and bracketed-paste-p bracketed-paste-end)
+                      end-pattern)
+            (concat start-pattern string end-pattern))))
+    (funcall send-string repl-buffer-name final-string)))
+
 (defun termint--start-vterm-backend (repl-buffer-name repl-shell arg)
   "Start REPL-SHELL in REPL-BUFFER-NAME with numeric ARG with vterm backend."
   (require 'vterm)
@@ -268,36 +313,14 @@ If a numeric prefix argument is provided, send the string to the
 process with that number."
            repl-name)
          (interactive "sinput your command: \nP")
-         (let* ((repl-buffer-name
-                 (if session
-                     (format "*%s*<%d>" ,repl-name session)
-                   (format "*%s*" ,repl-name)))
-                (send-string
-                 (pcase termint-backend
-                   ('eat #'termint--send-string-eat-backend)
-                   ('vterm #'termint--send-string-vterm-backend)
-                   ('term #'termint--send-string-term-backend)))
-                (multi-lines-p (string-match-p "\n" string))
-                (bracketed-paste-start "\e[200~")
-                (bracketed-paste-end "\e[201~")
-                (string (funcall ,str-process-func-name string))
-                (start-pattern (if (stringp ,start-pattern-name) ,start-pattern-name
-                                 (if multi-lines-p
-                                     (plist-get ,start-pattern-name :multi-lines)
-                                   (plist-get ,start-pattern-name :single-line))))
-                (end-pattern (if (stringp ,end-pattern-name) ,end-pattern-name
-                               (if multi-lines-p
-                                   (plist-get ,end-pattern-name :multi-lines)
-                                 (plist-get ,end-pattern-name :single-line))))
-                (final-string
-                 (if multi-lines-p
-                     (concat start-pattern
-                             (and ,bracketed-paste-p-name bracketed-paste-start)
-                             string
-                             (and ,bracketed-paste-p-name bracketed-paste-end)
-                             end-pattern)
-                   (concat start-pattern string end-pattern))))
-           (funcall send-string repl-buffer-name final-string)))
+         (termint--send-string string
+                               ,repl-name
+                               session
+                               ,start-pattern-name
+                               ,end-pattern-name
+                               ,bracketed-paste-p-name
+                               ,str-process-func-name
+                               ,source-syntax-name))
 
        (when (require 'evil nil t)
          (evil-define-operator ,send-region-operator-name (beg end session)
