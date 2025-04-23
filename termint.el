@@ -182,7 +182,15 @@ initialized during each `termint-define' call."
 
 
 
-
+(defun termint--hide-window (repl-name arg)
+  "Hide the REPL window.
+The target REPL buffer is specified by REPL-NAME and ARG."
+  (when-let* ((buffer-name
+               (if arg (format "*%s*<%d>" repl-name arg)
+                 (format "*%s*" repl-name)))
+              (buf (get-buffer buffer-name))
+              (buffer-window (get-buffer-window buf)))
+    (delete-window buffer-window)))
 
 
 
@@ -357,12 +365,7 @@ associated with that number" source-region-func-name repl-name)
 With numeric prefix argument, hide the window with that number as a
 suffix." repl-name)
          (interactive "P")
-         (when-let* ((eat-buffer-name
-                      (if arg (format "*%s*<%d>" ,repl-name arg)
-                        (format "*%s*" ,repl-name)))
-                     (buf (get-buffer eat-buffer-name))
-                     (eat-buffer-window (get-buffer-window buf)))
-           (delete-window eat-buffer-window)))
+         (termint--hide-window ,repl-name arg))
 
        (defvar ,keymap-name
          (let ((map (make-sparse-keymap)))
