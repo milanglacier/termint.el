@@ -62,6 +62,22 @@
 (declare-function term-char-mode "term")
 (declare-function term-send-raw-string "term")
 
+(defun termint--start (repl-name repl-cmd arg)
+  "Start a REPL.
+REPL-NAME is used to determine the buffer name, REPL-CMD is used to
+determine the shell command.  ARG is a numeric suffix for the buffer
+name."
+  (let* ((repl-buffer-name (format "*%s*" repl-name))
+         (repl-shell (if (functionp repl-cmd)
+                         (funcall repl-cmd)
+                       repl-cmd)))
+    (pcase termint-backend
+      ('eat (termint--start-eat-backend repl-buffer-name repl-shell arg))
+      ('vterm (termint--start-vterm-backend repl-buffer-name repl-shell arg))
+      ('term
+       (termint--start-term-backend repl-buffer-name repl-shell arg)))))
+
+
 (defun termint--start-term-backend (repl-buffer-name repl-shell arg)
   "Start REPL-SHELL in REPL-BUFFER-NAME with numeric ARG with term backend."
   (require 'term)
@@ -88,20 +104,16 @@
         (eat-shell repl-shell))
     (eat nil arg)))
 
-(defun termint--start (repl-name repl-cmd arg)
-  "Start a REPL.
-REPL-NAME is used to determine the buffer name, REPL-CMD is used to
-determine the shell command.  ARG is a numeric suffix for the buffer
-name."
-  (let* ((repl-buffer-name (format "*%s*" repl-name))
-         (repl-shell (if (functionp repl-cmd)
-                         (funcall repl-cmd)
-                       repl-cmd)))
-    (pcase termint-backend
-      ('eat (termint--start-eat-backend repl-buffer-name repl-shell arg))
-      ('vterm (termint--start-vterm-backend repl-buffer-name repl-shell arg))
-      ('term
-       (termint--start-term-backend repl-buffer-name repl-shell arg)))))
+(defun termint--start-vterm-backend (repl-buffer-name repl-shell arg)
+  "Start REPL-SHELL in REPL-BUFFER-NAME with numeric ARG with vterm backend."
+  (require 'vterm)
+  (let ((vterm-buffer-name repl-buffer-name)
+        (vterm-shell repl-shell))
+    (vterm arg)))
+
+
+
+
 
 (defun termint--send-string
     (string
@@ -147,13 +159,6 @@ initialized during each `termint-define' call."
             (concat start-pattern string end-pattern))))
     (funcall send-string repl-buffer-name final-string)))
 
-(defun termint--start-vterm-backend (repl-buffer-name repl-shell arg)
-  "Start REPL-SHELL in REPL-BUFFER-NAME with numeric ARG with vterm backend."
-  (require 'vterm)
-  (let ((vterm-buffer-name repl-buffer-name)
-        (vterm-shell repl-shell))
-    (vterm arg)))
-
 (defun termint--send-string-term-backend (repl-buffer-name str)
   "Send STR to the process behind REPL-BUFFER-NAME with term backend."
   (with-current-buffer repl-buffer-name
@@ -173,6 +178,13 @@ initialized during each `termint-define' call."
   "Send STR to the process behind REPL-BUFFER-NAME with vterm backend."
   (with-current-buffer repl-buffer-name
     (vterm-send-string str)))
+
+
+
+
+
+
+
 
 (defmacro termint-define (repl-name repl-cmd &rest args)
   "Define a REPL schema.
