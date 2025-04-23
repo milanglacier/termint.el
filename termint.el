@@ -88,6 +88,20 @@
         (eat-shell repl-shell))
     (eat nil arg)))
 
+(defun termint--start (repl-name repl-cmd arg)
+  "Start a REPL.
+REPL-NAME is used to determine the buffer name, REPL-CMD is used to
+determine the shell command.  ARG is a numeric suffix for the buffer
+name."
+  (let* ((repl-buffer-name (format "*%s*" repl-name))
+         (repl-shell (if (functionp repl-cmd)
+                         (funcall repl-cmd)
+                       repl-cmd)))
+    (pcase termint-backend
+      ('eat (termint--start-eat-backend repl-buffer-name repl-shell arg))
+      ('vterm (termint--start-vterm-backend repl-buffer-name repl-shell arg))
+      ('term
+       (termint--start-term-backend repl-buffer-name repl-shell arg)))))
 
 (defun termint--start-vterm-backend (repl-buffer-name repl-shell arg)
   "Start REPL-SHELL in REPL-BUFFER-NAME with numeric ARG with vterm backend."
@@ -222,15 +236,7 @@ the buffer selected (or created). With a numeric prefix arg, create or
 switch to the session with that number as a suffix."
            repl-name repl-name)
          (interactive "P")
-         (let* ((repl-buffer-name (format "*%s*" ,repl-name))
-                (repl-shell (if (functionp ,repl-cmd-name)
-                                (funcall ,repl-cmd-name)
-                              ,repl-cmd-name)))
-           (pcase termint-backend
-             ('eat (termint--start-eat-backend repl-buffer-name repl-shell arg))
-             ('vterm (termint--start-vterm-backend repl-buffer-name repl-shell arg))
-             ('term
-              (termint--start-term-backend repl-buffer-name repl-shell arg)))))
+         (termint--start ,repl-name ,repl-cmd-name arg))
 
        (defun ,send-region-func-name (beg end &optional session)
          ,(format
