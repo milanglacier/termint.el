@@ -62,36 +62,36 @@
 (declare-function term-char-mode "term")
 (declare-function term-send-raw-string "term")
 
-(defun termint--get-numeric-suffix (arg)
-  "Return the numeric suffix from ARG if interactive spec is \"P\"."
+(defun termint--get-session-suffix (session)
+  "Return the session suffix from SESSION if interactive spec is \"P\"."
   (cond
-   ((numberp arg) (abs arg))
-   ((numberp (car arg)) (floor (log (car arg) 4)))
+   ((numberp session) (abs session))
+   ((numberp (car session)) (floor (log (car session) 4)))
    (t nil)))
 
-(defun termint--start (repl-name repl-cmd arg)
+(defun termint--start (repl-name repl-cmd session)
   "Start a REPL.
 REPL-NAME is used to determine the buffer name, REPL-CMD is used to
-determine the shell command.  ARG is a numeric suffix for the buffer
-name."
+determine the shell command.  SESSION is a numeric suffix for the
+buffer name."
   (let* ((repl-buffer-name (format "*%s*" repl-name))
          (repl-shell (if (functionp repl-cmd)
                          (funcall repl-cmd)
                        repl-cmd)))
     (pcase termint-backend
-      ('eat (termint--start-eat-backend repl-buffer-name repl-shell arg))
-      ('vterm (termint--start-vterm-backend repl-buffer-name repl-shell arg))
+      ('eat (termint--start-eat-backend repl-buffer-name repl-shell session))
+      ('vterm (termint--start-vterm-backend repl-buffer-name repl-shell session))
       ('term
-       (termint--start-term-backend repl-buffer-name repl-shell arg)))))
+       (termint--start-term-backend repl-buffer-name repl-shell session)))))
 
 
-(defun termint--start-term-backend (repl-buffer-name repl-shell arg)
-  "Start REPL-SHELL in REPL-BUFFER-NAME with numeric ARG with term backend."
+(defun termint--start-term-backend (repl-buffer-name repl-shell session)
+  "Start REPL-SHELL in REPL-BUFFER-NAME with numeric SESSION with term backend."
   (require 'term)
-  (setq arg (termint--get-numeric-suffix arg))
+  (setq session (termint--get-session-suffix session))
   (let ((term-buffer-name
-         (if arg
-             (format "%s<%d>" repl-buffer-name arg)
+         (if session
+             (format "%s<%d>" repl-buffer-name session)
            repl-buffer-name)))
     (if (get-buffer term-buffer-name)
         (pop-to-buffer term-buffer-name)
@@ -105,21 +105,21 @@ name."
           (term-char-mode))
         (pop-to-buffer term-buffer)))))
 
-(defun termint--start-eat-backend (repl-buffer-name repl-shell arg)
-  "Start REPL-SHELL in REPL-BUFFER-NAME with numeric ARG with eat backend."
+(defun termint--start-eat-backend (repl-buffer-name repl-shell session)
+  "Start REPL-SHELL in REPL-BUFFER-NAME with numeric SESSION with eat backend."
   (require 'eat)
-  (setq arg (termint--get-numeric-suffix arg))
+  (setq session (termint--get-session-suffix session))
   (let ((eat-buffer-name repl-buffer-name)
         (eat-shell repl-shell))
-    (eat nil arg)))
+    (eat nil session)))
 
-(defun termint--start-vterm-backend (repl-buffer-name repl-shell arg)
-  "Start REPL-SHELL in REPL-BUFFER-NAME with numeric ARG with vterm backend."
+(defun termint--start-vterm-backend (repl-buffer-name repl-shell session)
+  "Start REPL-SHELL in REPL-BUFFER-NAME with numeric SESSION using vterm."
   (require 'vterm)
-  (setq arg (termint--get-numeric-suffix arg))
+  (setq session (termint--get-session-suffix session))
   (let ((vterm-buffer-name repl-buffer-name)
         (vterm-shell repl-shell))
-    (vterm arg)))
+    (vterm session)))
 
 
 
@@ -138,7 +138,7 @@ The target REPL buffer is specified by REPL-NAME and SESSION.
 Additional parameters—START-PATTERN, END-PATTERN, BRACKETED-PASTE-P,
 and STR-PROCESS-FUNC—are variables associated with REPL-NAME,
 initialized during each `termint-define' call."
-  (setq session (termint--get-numeric-suffix session))
+  (setq session (termint--get-session-suffix session))
   (let* ((repl-buffer-name
           (if session
               (format "*%s*<%d>" repl-name session)
@@ -193,12 +193,12 @@ initialized during each `termint-define' call."
 
 
 
-(defun termint--hide-window (repl-name arg)
+(defun termint--hide-window (repl-name session)
   "Hide the REPL window.
-The target REPL buffer is specified by REPL-NAME and ARG."
-  (setq arg (termint--get-numeric-suffix arg))
+The target REPL buffer is specified by REPL-NAME and SESSION."
+  (setq session (termint--get-session-suffix session))
   (when-let* ((buffer-name
-               (if arg (format "*%s*<%d>" repl-name arg)
+               (if session (format "*%s*<%d>" repl-name session)
                  (format "*%s*" repl-name)))
               (buf (get-buffer buffer-name))
               (buffer-window (get-buffer-window buf)))
@@ -317,20 +317,20 @@ variant for greater flexibility and control."
        (defvar ,end-pattern-name ,end-pattern
          ,(format "The last string to send to the %s REPL after sending the text." repl-name))
 
-       (defun ,start-func-name (&optional arg)
+       (defun ,start-func-name (&optional session)
          ,(format
            "Create a %s REPL buffer.
 Start a new %s session or switch to an already active session. Return
-the buffer selected (or created). With a numeric prefix arg, create or
-switch to the session with that number as a suffix."
+the buffer selected (or created). With a numeric prefix SESSION,
+create or switch to the session with that number as a suffix."
            repl-name repl-name)
          (interactive "P")
-         (termint--start ,repl-name ,repl-cmd-name arg))
+         (termint--start ,repl-name ,repl-cmd-name session))
 
        (defun ,send-region-func-name (beg end &optional session)
          ,(format
            "Send the region delimited by BEG and END to %s.
-With numeric prefix argument, send region to the process associated
+With numeric prefix SESSION, send region to the process associated
 with that number." repl-name)
          (interactive "r\nP")
          (let ((str (buffer-substring-no-properties beg end)))
@@ -381,13 +381,13 @@ associated with that number" source-region-func-name repl-name)
            (interactive "<r>P")
            (,source-region-func-name beg end session)))
 
-       (defun ,hide-window-func-name (&optional arg)
+       (defun ,hide-window-func-name (&optional session)
          ,(format
            "hide the %s window.
-With numeric prefix argument, hide the window with that number as a
+With numeric prefix SESSION, hide the window with that number as a
 suffix." repl-name)
          (interactive "P")
-         (termint--hide-window ,repl-name arg))
+         (termint--hide-window ,repl-name session))
 
        (defvar ,keymap-name
          (let ((map (make-sparse-keymap)))
