@@ -65,6 +65,7 @@
 (defun termint--get-session-suffix (session)
   "Return the session suffix from SESSION if interactive spec is \"P\"."
   (cond
+   ((eq 0 session) nil)
    ((numberp session) (abs session))
    ((numberp (car session)) (floor (log (car session) 4)))
    (t nil)))
