@@ -62,6 +62,13 @@
 (declare-function term-char-mode "term")
 (declare-function term-send-raw-string "term")
 
+(defun termint--get-numeric-suffix (arg)
+  "Return the numeric suffix from ARG if interactive spec is \"P\"."
+  (cond
+   ((numberp arg) (abs arg))
+   ((numberp (car arg)) (floor (log (car arg) 4)))
+   (t nil)))
+
 (defun termint--start (repl-name repl-cmd arg)
   "Start a REPL.
 REPL-NAME is used to determine the buffer name, REPL-CMD is used to
@@ -81,6 +88,7 @@ name."
 (defun termint--start-term-backend (repl-buffer-name repl-shell arg)
   "Start REPL-SHELL in REPL-BUFFER-NAME with numeric ARG with term backend."
   (require 'term)
+  (setq arg (termint--get-numeric-suffix arg))
   (let ((term-buffer-name
          (if arg
              (format "%s<%d>" repl-buffer-name arg)
@@ -100,6 +108,7 @@ name."
 (defun termint--start-eat-backend (repl-buffer-name repl-shell arg)
   "Start REPL-SHELL in REPL-BUFFER-NAME with numeric ARG with eat backend."
   (require 'eat)
+  (setq arg (termint--get-numeric-suffix arg))
   (let ((eat-buffer-name repl-buffer-name)
         (eat-shell repl-shell))
     (eat nil arg)))
@@ -107,6 +116,7 @@ name."
 (defun termint--start-vterm-backend (repl-buffer-name repl-shell arg)
   "Start REPL-SHELL in REPL-BUFFER-NAME with numeric ARG with vterm backend."
   (require 'vterm)
+  (setq arg (termint--get-numeric-suffix arg))
   (let ((vterm-buffer-name repl-buffer-name)
         (vterm-shell repl-shell))
     (vterm arg)))
@@ -128,6 +138,7 @@ The target REPL buffer is specified by REPL-NAME and SESSION.
 Additional parameters—START-PATTERN, END-PATTERN, BRACKETED-PASTE-P,
 and STR-PROCESS-FUNC—are variables associated with REPL-NAME,
 initialized during each `termint-define' call."
+  (setq session (termint--get-numeric-suffix session))
   (let* ((repl-buffer-name
           (if session
               (format "*%s*<%d>" repl-name session)
@@ -185,6 +196,7 @@ initialized during each `termint-define' call."
 (defun termint--hide-window (repl-name arg)
   "Hide the REPL window.
 The target REPL buffer is specified by REPL-NAME and ARG."
+  (setq arg (termint--get-numeric-suffix arg))
   (when-let* ((buffer-name
                (if arg (format "*%s*<%d>" repl-name arg)
                  (format "*%s*" repl-name)))
