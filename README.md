@@ -24,9 +24,9 @@ sessions, send code snippets, source files, and manage the REPL window.
 - Customizable Interaction: Control aspects like bracketed paste mode, start/end
   patterns for sending code (with different behaviour for single vs. multi-line
   input), and code preprocessing.
-- Code Sourcing: Provides a mechanism (`:source-syntax`) to
-  source code, often by writing to a temporary file and sending a command to
-  source it (helpers included for common languages).
+- Code Sourcing: Provides a mechanism (`:source-syntax`) to source code, often
+  by writing to a temporary file and sending a command to source it (helpers
+  included for common languages).
 - Generated Commands: Automatically creates functions for:
   - Starting/switching to REPL sessions
   - Sending regions/strings
@@ -39,8 +39,8 @@ sessions, send code snippets, source files, and manage the REPL window.
 
 # Installation
 
-This package is currently available only through Git. Install it using
-one of the following methods:
+This package is currently available only through Git. Install it using one of
+the following methods:
 
 ```emacs-lisp
 (use-package termint
@@ -92,9 +92,11 @@ For a `(termint-define "myrepl" ...)` definition, the macro generates:
   - `termint-myrepl-start`: Start or switch to the REPL session.
   - `termint-myrepl-send-string`: Send a string (prompted) to the REPL.
   - `termint-myrepl-send-region`: Send the selected region to the REPL.
-  - `termint-myrepl-source-region`: Source the selected region to the REPL.
   - `termint-myrepl-send-paragraph`: Send current paragraph to the REPL.
+  - `termint-myrepl-send-buffer`: Send current buffer to the REPL.
+  - `termint-myrepl-source-region`: Source the selected region to the REPL.
   - `termint-myrepl-source-paragraph`: Source current paragraph to the REPL.
+  - `termint-myrepl-source-buffer`: Source current buffer to the REPL.
   - `termint-myrepl-hide-window`: Hide the REPL window.
 
 - Evil Operators (if Evil is loaded):
@@ -143,9 +145,11 @@ In the below example, we created two REPL schemas:
   ;; C-c m s: `termint-ipython-start'
   ;; C-c m e: `termint-ipython-send-string'
   ;; C-c m r: `termint-ipython-send-region'
-  ;; C-c m R: `termint-ipython-source-region'
   ;; C-c m p: `termint-ipython-send-paragraph'
+  ;; C-c m b: `termint-ipython-send-buffer'
+  ;; C-c m R: `termint-ipython-source-region'
   ;; C-c m P: `termint-ipython-source-paragraph'
+  ;; C-c m B: `termint-ipython-source-buffer'
   ;; C-c m h: `termint-ipython-hide-window'
   (define-key python-ts-mode-map (kbd "C-c m") termint-ipython-map)
 
@@ -226,13 +230,12 @@ consideration of its potential drawbacks.
 
 ## Bracketed-Paste Mode
 
-Bracketed-paste mode wraps pasted text in escape sequences, letting
-terminals distinguish it from typed input. In `termint`, control it
-via `:bracketed-paste-p` in `termint-define`. This prevents REPLs from
-misinterpreting pasted newlines or special characters. Most modern
-REPLs support it, making `:bracketed-paste-p t` a generally
-recommended setting, but some may not work perfectly. Test with your
-setup to confirm compatibility.
+Bracketed-paste mode wraps pasted text in escape sequences, letting terminals
+distinguish it from typed input. In `termint`, control it via
+`:bracketed-paste-p` in `termint-define`. This prevents REPLs from
+misinterpreting pasted newlines or special characters. Most modern REPLs support
+it, making `:bracketed-paste-p t` a generally recommended setting, but some may
+not work perfectly. Test with your setup to confirm compatibility.
 
 ## Comparison with Other Approaches
 

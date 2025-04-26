@@ -242,6 +242,10 @@ initialized during each `termint-define' call."
           (end (progn (forward-paragraph) (point))))
       (cons beg end))))
 
+(defun termint--dispatch-buffer ()
+  "Return the beginning and end positions of the current buffer."
+  (cons (point-min) (point-max)))
+
 (defun termint--dispatch-region-and-send
     (dispatcher send-string-func session source-syntax)
   "Get region via DISPATCHER, optionally transform for sourcing, and send.
@@ -368,7 +372,10 @@ variant for greater flexibility and control."
         (end-pattern-name (intern (concat "termint-" repl-name "-end-pattern")))
         ;; send paragraph and source paragraph
         (send-paragraph-func-name (intern (concat "termint-" repl-name "-send-paragraph")))
-        (source-paragraph-func-name (intern (concat "termint-" repl-name "-source-paragraph"))))
+        (source-paragraph-func-name (intern (concat "termint-" repl-name "-source-paragraph")))
+        ;; send buffer and source buffer
+        (send-buffer-func-name (intern (concat "termint-" repl-name "-send-buffer")))
+        (source-buffer-func-name (intern (concat "termint-" repl-name "-source-buffer"))))
 
     `(progn
 
@@ -454,6 +461,25 @@ with that number." repl-name)
           #'termint--dispatch-paragraph #',send-string-func-name
           session ,source-syntax-name))
 
+       (defun ,send-buffer-func-name (&optional session)
+         ,(format
+           "Send the current buffer to %s.
+With numeric prefix argument, send buffer to the process associated
+with that number." repl-name)
+         (interactive "P")
+         (termint--dispatch-region-and-send
+          #'termint--dispatch-buffer #',send-string-func-name session nil))
+
+       (defun ,source-buffer-func-name (&optional session)
+         ,(format
+           "Send the current buffer to %s.
+With numeric prefix argument, send buffer to the process associated
+with that number." repl-name)
+         (interactive "P")
+         (termint--dispatch-region-and-send
+          #'termint--dispatch-buffer #',send-string-func-name
+          session ,source-syntax-name))
+
        (when (require 'evil nil t)
          (evil-define-operator ,send-region-operator-name (beg end session)
            ,(format
@@ -487,9 +513,11 @@ suffix." repl-name)
            (define-key map "r" #',send-region-func-name)
            (define-key map "R" #',source-region-func-name)
            (define-key map "e" #',send-string-func-name)
-           (define-key map "h" #',hide-window-func-name)
            (define-key map "p" #',send-paragraph-func-name)
            (define-key map "P" #',source-paragraph-func-name)
+           (define-key map "b" #',send-buffer-func-name)
+           (define-key map "B" #',source-buffer-func-name)
+           (define-key map "h" #',hide-window-func-name)
            map)
          ,(format "Keymap for %s REPL commands." repl-name)))))
 
