@@ -90,9 +90,11 @@ For a `(termint-define "myrepl" ...)` definition, the macro generates:
 - Functions:
 
   - `termint-myrepl-start`: Start or switch to the REPL session.
-  - `termint-myrepl-send-region`: Send the selected region to the REPL.
   - `termint-myrepl-send-string`: Send a string (prompted) to the REPL.
+  - `termint-myrepl-send-region`: Send the selected region to the REPL.
   - `termint-myrepl-source-region`: Source the selected region to the REPL.
+  - `termint-myrepl-send-paragraph`: Send current paragraph to the REPL.
+  - `termint-myrepl-source-paragraph`: Source current paragraph to the REPL.
   - `termint-myrepl-hide-window`: Hide the REPL window.
 
 - Evil Operators (if Evil is loaded):
@@ -139,9 +141,11 @@ In the below example, we created two REPL schemas:
                   :source-syntax termint-ipython-source-syntax-template)
 
   ;; C-c m s: `termint-ipython-start'
+  ;; C-c m e: `termint-ipython-send-string'
   ;; C-c m r: `termint-ipython-send-region'
   ;; C-c m R: `termint-ipython-source-region'
-  ;; C-c m e: `termint-ipython-send-string'
+  ;; C-c m p: `termint-ipython-send-paragraph'
+  ;; C-c m P: `termint-ipython-source-paragraph'
   ;; C-c m h: `termint-ipython-hide-window'
   (define-key python-ts-mode-map (kbd "C-c m") termint-ipython-map)
 
