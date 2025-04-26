@@ -235,6 +235,31 @@ initialized during each `termint-define' call."
   (with-current-buffer repl-buffer-name
     (vterm-send-string str)))
 
+(defun termint--dispatch-paragraph ()
+  "Return the beginning and end positions of the current paragraph."
+  (save-excursion
+    (let ((beg (progn (backward-paragraph) (point)))
+          (end (progn (forward-paragraph) (point))))
+      (cons beg end))))
+
+(defun termint--dispatch-region-and-send
+    (dispatcher send-string-func session source-syntax)
+  "Get region via DISPATCHER, optionally transform for sourcing, and send.
+DISPATCHER is a function returning a (BEG . END) cons cell for the
+code region.  SEND-STRING-FUNC is the function used to send the final
+string to the REPL.  SESSION is the number for the target REPL
+session.  If SOURCE-SYNTAX is non-nil, transform the region's text
+using SOURCE-SYNTAX via `termint--create-source-command' before
+sending."
+  (when-let*
+      ((region (funcall dispatcher))
+       (beg (car region))
+       (end (cdr region))
+       (string (buffer-substring-no-properties beg end)))
+    (when source-syntax
+      (setq string (termint--create-source-command string source-syntax)))
+    (funcall send-string-func string session)))
+
 
 
 
@@ -340,7 +365,10 @@ variant for greater flexibility and control."
         (source-syntax-name (intern (concat "termint-" repl-name "-source-syntax")))
         (bracketed-paste-p-name (intern (concat "termint-" repl-name "-use-bracketed-paste-mode")))
         (start-pattern-name (intern (concat "termint-" repl-name "-start-pattern")))
-        (end-pattern-name (intern (concat "termint-" repl-name "-end-pattern"))))
+        (end-pattern-name (intern (concat "termint-" repl-name "-end-pattern")))
+        ;; send paragraph and source paragraph
+        (send-paragraph-func-name (intern (concat "termint-" repl-name "-send-paragraph")))
+        (source-paragraph-func-name (intern (concat "termint-" repl-name "-source-paragraph"))))
 
     `(progn
 
@@ -407,6 +435,25 @@ process with that number."
                                ,bracketed-paste-p-name
                                ,str-process-func-name))
 
+       (defun ,send-paragraph-func-name (&optional session)
+         ,(format
+           "Send the current paragraph to %s.
+With numeric prefix argument, send paragraph to the process associated
+with that number." repl-name)
+         (interactive "P")
+         (termint--dispatch-region-and-send
+          #'termint--dispatch-paragraph #',send-string-func-name session nil))
+
+       (defun ,source-paragraph-func-name (&optional session)
+         ,(format
+           "Send the current paragraph to %s.
+With numeric prefix argument, send paragraph to the process associated
+with that number." repl-name)
+         (interactive "P")
+         (termint--dispatch-region-and-send
+          #'termint--dispatch-paragraph #',send-string-func-name
+          session ,source-syntax-name))
+
        (when (require 'evil nil t)
          (evil-define-operator ,send-region-operator-name (beg end session)
            ,(format
@@ -441,6 +488,8 @@ suffix." repl-name)
            (define-key map "R" #',source-region-func-name)
            (define-key map "e" #',send-string-func-name)
            (define-key map "h" #',hide-window-func-name)
+           (define-key map "p" #',send-paragraph-func-name)
+           (define-key map "P" #',source-paragraph-func-name)
            map)
          ,(format "Keymap for %s REPL commands." repl-name)))))
 
