@@ -36,6 +36,8 @@
 
 ;;; Code:
 
+(require 'cl-lib)
+
 (defgroup termint nil
   "Group for termint."
   :group 'tools)
@@ -86,6 +88,31 @@ buffer name."
        (termint--start-term-backend repl-buffer-name repl-shell session)))))
 
 
+(defun termint--rearrange-session-on-buffer-exit ()
+  "Renumber sibling REPL sessions.
+This function is called after one session is killed to maintain
+consecutive ordering of REPL sessions.  The base buffer `*repl*`
+without a number is considered with session number 0."
+  (interactive)
+  (when-let* ((buffer-name (prog1 (buffer-name)
+                             (rename-buffer (concat (buffer-name) "--tmp"))))
+              (repl-name (when (string-match "^\\*\\(.*\\)\\*" buffer-name)
+                           (match-string 1 buffer-name)))
+              (sessions (seq-filter
+                         #'get-buffer
+                         `(,(format "*%s*" repl-name)
+                           ,@(mapcar
+                              (lambda (x) (format "*%s*<%d>" repl-name x))
+                              (number-sequence 1 9))))))
+    (cl-loop for session in sessions
+             for idx from 0
+             do (with-current-buffer session
+                  (rename-buffer
+                   (if (eq 0 idx)
+                       (rename-buffer (format "*%s*" repl-name))
+                     (rename-buffer (format "*%s*<%d>" repl-name idx))))))))
+
+
 (defun termint--start-term-backend (repl-buffer-name repl-shell session)
   "Start REPL-SHELL in REPL-BUFFER-NAME with numeric SESSION with term backend."
   (require 'term)
@@ -103,25 +130,42 @@ buffer name."
         (with-current-buffer term-buffer
           (term-mode)
           (term-exec term-buffer term-buffer-name shell-cmd nil shell-args)
-          (term-char-mode))
+          (term-char-mode)
+          (termint-mode 1))
         (pop-to-buffer term-buffer)))))
 
 (defun termint--start-eat-backend (repl-buffer-name repl-shell session)
   "Start REPL-SHELL in REPL-BUFFER-NAME with numeric SESSION with eat backend."
   (require 'eat)
   (setq session (termint--get-session-suffix session))
-  (let ((eat-buffer-name repl-buffer-name)
-        (eat-shell repl-shell))
-    (eat nil session)))
+  (let* ((eat-buffer-name repl-buffer-name)
+         (eat-shell repl-shell)
+         (buffer (eat nil session)))
+    (with-current-buffer buffer
+      (termint-mode 1))
+    buffer))
 
 (defun termint--start-vterm-backend (repl-buffer-name repl-shell session)
   "Start REPL-SHELL in REPL-BUFFER-NAME with numeric SESSION using vterm."
   (require 'vterm)
   (setq session (termint--get-session-suffix session))
-  (let ((vterm-buffer-name repl-buffer-name)
-        (vterm-shell repl-shell))
-    (vterm session)))
+  (let* ((vterm-buffer-name repl-buffer-name)
+         (vterm-shell repl-shell)
+         (buffer (vterm session)))
+    (with-current-buffer buffer
+      (termint-mode 1))
+    buffer))
 
+(define-minor-mode termint-mode
+  "Minor mode for REPL buffers managed by termint."
+  :init-value nil
+  (if termint-mode
+      (add-hook 'kill-buffer-hook
+                #'termint--rearrange-session-on-buffer-exit
+                nil t)
+    (remove-hook 'kill-buffer-hook
+                 #'termint--rearrange-session-on-buffer-exit
+                 t)))
 
 
 
