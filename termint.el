@@ -92,7 +92,7 @@ buffer name."
   "Renumber sibling REPL sessions.
 This function is called after one session is killed to maintain
 consecutive ordering of REPL sessions.  The base buffer `*repl*`
-without a number is considered with session number 0."
+without a number is considered as session 0."
   (interactive)
   (when-let* ((buffer-name (prog1 (buffer-name)
                              (rename-buffer (concat (buffer-name) "--tmp"))))
