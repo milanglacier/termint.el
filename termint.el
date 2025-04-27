@@ -246,6 +246,20 @@ initialized during each `termint-define' call."
   "Return the beginning and end positions of the current buffer."
   (cons (point-min) (point-max)))
 
+(defun termint--dispatch-defun ()
+  "Return the beginning and end positions of the current defun."
+  (save-excursion
+    (if-let*
+        ((beg (and
+               (funcall #'beginning-of-defun nil)
+               (point)))
+         (end (progn
+                (funcall #'end-of-defun nil)
+                (point))))
+        (cons beg end)
+      (message "No defun found at point")
+      nil)))
+
 (defun termint--dispatch-region-and-send
     (dispatcher send-string-func session source-syntax)
   "Get region via DISPATCHER, optionally transform for sourcing, and send.
@@ -255,14 +269,16 @@ string to the REPL.  SESSION is the number for the target REPL
 session.  If SOURCE-SYNTAX is non-nil, transform the region's text
 using SOURCE-SYNTAX via `termint--create-source-command' before
 sending."
-  (when-let*
+  (if-let*
       ((region (funcall dispatcher))
        (beg (car region))
        (end (cdr region))
        (string (buffer-substring-no-properties beg end)))
-    (when source-syntax
-      (setq string (termint--create-source-command string source-syntax)))
-    (funcall send-string-func string session)))
+      (progn
+        (when source-syntax
+          (setq string (termint--create-source-command string source-syntax)))
+        (funcall send-string-func string session))
+    (message "Invalid region from dispatcher - nothing sent to REPL")))
 
 
 
@@ -375,7 +391,10 @@ variant for greater flexibility and control."
         (source-paragraph-func-name (intern (concat "termint-" repl-name "-source-paragraph")))
         ;; send buffer and source buffer
         (send-buffer-func-name (intern (concat "termint-" repl-name "-send-buffer")))
-        (source-buffer-func-name (intern (concat "termint-" repl-name "-source-buffer"))))
+        (source-buffer-func-name (intern (concat "termint-" repl-name "-source-buffer")))
+        ;; send defun and source defun
+        (send-defun-func-name (intern (concat "termint-" repl-name "-send-defun")))
+        (source-defun-func-name (intern (concat "termint-" repl-name "-source-defun"))))
 
     `(progn
 
@@ -480,6 +499,25 @@ with that number." repl-name)
           #'termint--dispatch-buffer #',send-string-func-name
           session ,source-syntax-name))
 
+       (defun ,send-defun-func-name (&optional session)
+         ,(format
+           "Send the current defun to %s.
+With numeric prefix argument, send defun to the process associated
+with that number." repl-name)
+         (interactive "P")
+         (termint--dispatch-region-and-send
+          #'termint--dispatch-defun #',send-string-func-name session nil))
+
+       (defun ,source-defun-func-name (&optional session)
+         ,(format
+           "Send the current defun to %s.
+With numeric prefix argument, send defun to the process associated
+with that number." repl-name)
+         (interactive "P")
+         (termint--dispatch-region-and-send
+          #'termint--dispatch-defun #',send-string-func-name
+          session ,source-syntax-name))
+
        (when (require 'evil nil t)
          (evil-define-operator ,send-region-operator-name (beg end session)
            ,(format
@@ -514,9 +552,11 @@ suffix." repl-name)
            (define-key map "R" #',source-region-func-name)
            (define-key map "e" #',send-string-func-name)
            (define-key map "p" #',send-paragraph-func-name)
+           (define-key map "f" #',send-defun-func-name)
            (define-key map "P" #',source-paragraph-func-name)
            (define-key map "b" #',send-buffer-func-name)
            (define-key map "B" #',source-buffer-func-name)
+           (define-key map "F" #',source-defun-func-name)
            (define-key map "h" #',hide-window-func-name)
            map)
          ,(format "Keymap for %s REPL commands." repl-name)))))

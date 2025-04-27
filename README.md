@@ -94,9 +94,11 @@ For a `(termint-define "myrepl" ...)` definition, the macro generates:
   - `termint-myrepl-send-region`: Send the selected region to the REPL.
   - `termint-myrepl-send-paragraph`: Send current paragraph to the REPL.
   - `termint-myrepl-send-buffer`: Send current buffer to the REPL.
+  - `termint-myrepl-send-defun`: Send current defun to the REPL.
   - `termint-myrepl-source-region`: Source the selected region to the REPL.
   - `termint-myrepl-source-paragraph`: Source current paragraph to the REPL.
   - `termint-myrepl-source-buffer`: Source current buffer to the REPL.
+  - `termint-myrepl-source-defun`: Source current defun to the REPL.
   - `termint-myrepl-hide-window`: Hide the REPL window.
 
 - Evil Operators (if Evil is loaded):
@@ -147,9 +149,11 @@ In the below example, we created two REPL schemas:
   ;; C-c m r: `termint-ipython-send-region'
   ;; C-c m p: `termint-ipython-send-paragraph'
   ;; C-c m b: `termint-ipython-send-buffer'
+  ;; C-c m f: `termint-ipython-send-defun'
   ;; C-c m R: `termint-ipython-source-region'
   ;; C-c m P: `termint-ipython-source-paragraph'
   ;; C-c m B: `termint-ipython-source-buffer'
+  ;; C-c m F: `termint-ipython-source-defun'
   ;; C-c m h: `termint-ipython-hide-window'
   (define-key python-ts-mode-map (kbd "C-c m") termint-ipython-map)
 
