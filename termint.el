@@ -444,7 +444,7 @@ with that number." repl-name)
        (defun ,source-region-func-name (beg end &optional session)
          ,(format
            "Source the region delimited by BEG and END to %s.
-With numeric prefix argument, send region to the process associated
+With numeric prefix SESSION, send region to the process associated
 with that number." repl-name)
          (interactive "r\nP")
          (let* ((str (buffer-substring-no-properties beg end))
@@ -453,9 +453,9 @@ with that number." repl-name)
 
        (defun ,send-string-func-name (string &optional session)
          ,(format
-           "Send the string to %s.
+           "Send the STRING to %s.
 When invoked interactively, prompt for user input in the minibuffer.
-If a numeric prefix argument is provided, send the string to the
+If a numeric prefix SESSION is provided, send the string to the
 process with that number."
            repl-name)
          (interactive "sinput your command: \nP")
@@ -470,7 +470,7 @@ process with that number."
        (defun ,send-paragraph-func-name (&optional session)
          ,(format
            "Send the current paragraph to %s.
-With numeric prefix argument, send paragraph to the process associated
+With numeric prefix SESSION, send paragraph to the process associated
 with that number." repl-name)
          (interactive "P")
          (termint--dispatch-region-and-send
@@ -478,8 +478,8 @@ with that number." repl-name)
 
        (defun ,source-paragraph-func-name (&optional session)
          ,(format
-           "Send the current paragraph to %s.
-With numeric prefix argument, send paragraph to the process associated
+           "Source the current paragraph to %s.
+With numeric prefix SESSION, send paragraph to the process associated
 with that number." repl-name)
          (interactive "P")
          (termint--dispatch-region-and-send
@@ -489,7 +489,7 @@ with that number." repl-name)
        (defun ,send-buffer-func-name (&optional session)
          ,(format
            "Send the current buffer to %s.
-With numeric prefix argument, send buffer to the process associated
+With numeric prefix SESSION, send buffer to the process associated
 with that number." repl-name)
          (interactive "P")
          (termint--dispatch-region-and-send
@@ -497,8 +497,8 @@ with that number." repl-name)
 
        (defun ,source-buffer-func-name (&optional session)
          ,(format
-           "Send the current buffer to %s.
-With numeric prefix argument, send buffer to the process associated
+           "Source the current buffer to %s.
+With numeric prefix SESSION, send buffer to the process associated
 with that number." repl-name)
          (interactive "P")
          (termint--dispatch-region-and-send
@@ -508,7 +508,7 @@ with that number." repl-name)
        (defun ,send-defun-func-name (&optional session)
          ,(format
            "Send the current defun to %s.
-With numeric prefix argument, send defun to the process associated
+With numeric prefix SESSION, send defun to the process associated
 with that number." repl-name)
          (interactive "P")
          (termint--dispatch-region-and-send
@@ -516,8 +516,8 @@ with that number." repl-name)
 
        (defun ,source-defun-func-name (&optional session)
          ,(format
-           "Send the current defun to %s.
-With numeric prefix argument, send defun to the process associated
+           "Source the current defun to %s.
+With numeric prefix SESSION, send defun to the process associated
 with that number." repl-name)
          (interactive "P")
          (termint--dispatch-region-and-send
@@ -528,7 +528,7 @@ with that number." repl-name)
          (evil-define-operator ,send-region-operator-name (beg end session)
            ,(format
              "A evil operator wrapper around `%s'.
-With a numeric prefix argument, send the region to the %s process
+With a numeric prefix SESSION, send the region to the %s process
 associated with that number" send-region-func-name repl-name)
            :move-point nil
            (interactive "<r>P")
@@ -537,7 +537,7 @@ associated with that number" send-region-func-name repl-name)
          (evil-define-operator ,source-region-operator-name (beg end session)
            ,(format
              "A evil operator wrapper around `%s'.
-With a numeric prefix argument, send the region to the %s process
+With a numeric prefix SESSION, send the region to the %s process
 associated with that number" source-region-func-name repl-name)
            :move-point nil
            (interactive "<r>P")
