@@ -39,8 +39,8 @@ sessions, send code snippets, source files, and manage the REPL window.
 
 # Installation
 
-`termint` is available on the MELPA package repository. You can
-install it using your preferred package manager.
+`termint` is available on the MELPA package repository. You can install it using
+your preferred package manager.
 
 ```emacs-lisp
 (package-install 'termint)
@@ -83,35 +83,61 @@ This macro defines a schema for interacting with a specific REPL.
 
 ## Generated Components
 
-For a `(termint-define "myrepl" ...)` definition, the macro generates:
+For a `(termint-define "myrepl" ...)` definition, the macro generates several
+components prefixed with `termint-myrepl-`:
 
-- Functions:
+**Functions:** A set of interactive functions are created for common REPL
+interactions:
 
-  - `termint-myrepl-start`: Start or switch to the REPL session.
-  - `termint-myrepl-send-string`: Send a string (prompted) to the REPL.
-  - `termint-myrepl-send-region`: Send the selected region to the REPL.
-  - `termint-myrepl-send-paragraph`: Send current paragraph to the REPL.
-  - `termint-myrepl-send-buffer`: Send current buffer to the REPL.
-  - `termint-myrepl-send-defun`: Send current defun to the REPL.
-  - `termint-myrepl-source-region`: Source the selected region to the REPL.
-  - `termint-myrepl-source-paragraph`: Source current paragraph to the REPL.
-  - `termint-myrepl-source-buffer`: Source current buffer to the REPL.
-  - `termint-myrepl-source-defun`: Source current defun to the REPL.
-  - `termint-myrepl-hide-window`: Hide the REPL window.
+- `termint-myrepl-start`: Start or switch to the REPL session.
+- `termint-myrepl-send-string`: Send a string (prompted) to the REPL.
+- `termint-myrepl-hide-window`: Hide the REPL window.
 
-- Evil Operators (if Evil is loaded):
-  - `termint-myrepl-send-region-operator`: Evil operator for sending.
-  - `termint-myrepl-source-region-operator`: Evil operator for sourcing.
-- Keymap:
-  - `termint-myrepl-map`: A keymap with default bindings. You can bind this map
-    to a prefix key.
-- Customizable Variables:
-  - `termint-myrepl-cmd`
-  - `termint-myrepl-use-bracketed-paste-mode`
-  - `termint-myrepl-start-pattern`
-  - `termint-myrepl-end-pattern`
-  - `termint-myrepl-str-process-func`
-  - `termint-myrepl-source-syntax`
+_Region Operations:_
+
+- `termint-myrepl-send-region`: Send the selected region to the REPL.
+- `termint-myrepl-source-region`: Source the selected region in the REPL.
+
+_Paragraph Operations:_
+
+- `termint-myrepl-send-paragraph`: Send the current paragraph to the REPL.
+- `termint-myrepl-source-paragraph`: Source the current paragraph in the REPL.
+
+_Buffer Operations:_
+
+- `termint-myrepl-send-buffer`: Send the current buffer to the REPL.
+- `termint-myrepl-source-buffer`: Source the current buffer in the REPL.
+
+_Defun Operations:_
+
+- `termint-myrepl-send-defun`: Send the current defun to the REPL.
+- `termint-myrepl-source-defun`: Source the current defun in the REPL.
+
+**Evil Operators:** If Evil mode is loaded, the following operators are defined,
+mirroring the region operations:
+
+- `termint-myrepl-send-region-operator`: Evil operator for sending text objects.
+- `termint-myrepl-source-region-operator`: Evil operator for sourcing text
+  objects.
+
+**Keymap:**
+
+- `termint-myrepl-map`: A keymap containing default bindings for the generated
+  functions. You can bind this map to a prefix key for convenient access.
+
+**Customizable Variables:** Several variables are generated to allow
+customization of the REPL's behavior:
+
+- `termint-myrepl-cmd`: The command used to start the REPL.
+- `termint-myrepl-use-bracketed-paste-mode`: Whether to use bracketed paste
+  mode.
+- `termint-myrepl-start-pattern`: Pattern marking the start of code to send
+  (optional).
+- `termint-myrepl-end-pattern`: Pattern marking the end of code to send
+  (optional).
+- `termint-myrepl-str-process-func`: Function to preprocess strings before
+  sending.
+- `termint-myrepl-source-syntax`: Template for the command used to source code.
 
 ## Examples
 
