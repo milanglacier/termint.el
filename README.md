@@ -116,9 +116,10 @@ _Defun Operations:_
 **Evil Operators:** If Evil mode is loaded, the following operators are defined,
 mirroring the region operations:
 
-- `termint-myrepl-send-region-operator`: Evil operator for sending text objects.
+- `termint-myrepl-send-region-operator`: Evil operator for sending text objects,
+  motions, or regions.
 - `termint-myrepl-source-region-operator`: Evil operator for sourcing text
-  objects.
+  objects, motions, or regions.
 
 **Keymap:**
 
