@@ -39,16 +39,14 @@ sessions, send code snippets, source files, and manage the REPL window.
 
 # Installation
 
-This package is currently available only through Git. Install it using one of
-the following methods:
+`termint` is available on the MELPA package repository. You can
+install it using your preferred package manager.
 
 ```emacs-lisp
-(use-package termint
-    :vc (:url "https://github.com/milanglacier/termint.el"
-         :rev :newest))
+(package-install 'termint)
 
-;; or use straight
-(straight-use-package '(termint :host github :repo "milanglacier/termint.el"))
+;; Alternatively, using straight.el
+(straight-use-package 'termint)
 ```
 
 # Configuration
