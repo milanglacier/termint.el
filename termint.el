@@ -322,34 +322,40 @@ REPL-NAME is a string, REPL-CMD is a string, a form evaluated to a
 string, or a function evaluated to a string.  ARGS is a plist, the
 following properties are supported:
 
-:bracketed-paste-p whether send the string with bracketed paste mode,
-the default value is nil.  You can change the behavior at run time by
-setting the generated variable
+`:bracketed-paste-p' whether send the string with bracketed paste
+mode, the default value is nil.  You can change the behavior at run
+time by setting the generated variable
 `termint-REPL-NAME-use-bracketed-paste-mode'.
 
-:start-pattern the first string to send to the REPl before sending the
-region.  The default is ''.  You can change the behavior at run time
-by setting the generated variable `termint-REPL-NAME-start-pattern'.
-Additionally, the value can be a plist with two attributes:
-`:single-line' for specifying the string in single-line
-scenarios.`:multi-lines' for defining the string in multi-line
-contexts.
-
-:end-pattern the last string to send to the REPL after sending the
-region.  The default is '\\r'.  You can change the behavior at run time
-by setting the generated variable
-`termint-REPL-NAME-end-pattern'.  Additionally the value can be a plist
-with two attributes: `:single-line' for specifying the string in
-single-line scenarios, and `:multi-lines' for defining the string in
+`:start-pattern' the first string to send to the REPl before sending
+the region.  The default is \"\".  You can change the behavior at run
+time by setting the generated variable
+`termint-REPL-NAME-start-pattern'.  Additionally, the value can be a
+plist with two attributes: `:single-line' for specifying the string in
+single-line scenarios.`:multi-lines' for defining the string in
 multi-line contexts.
 
-:str-process-func the function to process the string before sending it
-to the REPL.  The default is `identity'.  You can change the behavior
-at run time by setting the generated variable
+`:end-pattern' the string appended to the code before sending it to
+the REPL.  The default value is `(kbd \"RET\")'.  You can change the
+behavior at run time by setting the generated variable
+`termint-REPL-NAME-end-pattern'.  Additionally, the value can be a
+plist with two attributes: `:single-line' for specifying the string in
+single-line scenarios.`:multi-lines' for defining the string in
+multi-line contexts.
+
+While `(kbd \"RET\")' is generally a good default for `:end-pattern',
+some REPLs, when using bracketed paste with multi-lines input,
+automatically execute the code without needing a final newline.  In
+these cases, set `:end-pattern' to `(:single-line ,(kbd \"RET\")
+:multi-lines \"\").
+
+`:str-process-func' the function to process the string before sending
+it to the REPL.  The default is `identity'.  You can change the
+behavior at run time by setting the generated variable
 `termint-REPL-NAME-str-process-func'.
 
-:source-syntax: The function or syntax (specified as a string)
-that determines how code is sourced into the REPL.
+`:source-syntax:' The function or syntax (specified as a string) that
+determines how code is sourced into the REPL.
 
 When provided as a function, it takes a string representing the
 selected code region and returns a string as the source syntax.  A
