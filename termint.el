@@ -361,14 +361,16 @@ When provided as a function, it takes a string representing the
 selected code region and returns a string as the source syntax.  A
 common implementation involves writing the input code to a temporary
 file and generating a language-specific command to source that file.
-By default, `:source-syntax` uses the `identity` function, which
-directly transmits the input string to the REPL without file
-operations.
+By default, `:source-syntax' uses the `identity' function, which
+directly sends the input string to the REPL without file operations.
 
 When specified as a string, it should represent the sourcing command
 in the target language.  For example, in Python:
 
 exec(compile(open(\"{{file}}\", \"r\").read(), \"{{file}}\",\"exec\"))
+
+Here, `{{file}}` serves as a placeholder for the temporary file path,
+which is substituted at runtime.
 
 Use the string format for concise configuration, or the function
 variant for greater flexibility and control."
