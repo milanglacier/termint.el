@@ -147,9 +147,10 @@ the derived commands. To address this, we recommend configuring `termint` using
 `use-package`, which provides advanced lazy-loading functionality out of the
 box.
 
-We also recommend declare separate `use-package` forms for each REPL schema.
-This structure allows you to activate specific REPL commands as long as their
-corresponding programming language mode loads.
+We also recommend declare **separate** `use-package` forms for each
+REPL schema.  This structure allows you to activate specific REPL
+commands as long as their corresponding programming language mode
+loads.
 
 In the below example, we created two REPL schemas:
 
