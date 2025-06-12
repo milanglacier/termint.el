@@ -48,6 +48,10 @@
                  (const :tag "vterm" vterm)
                  (const :tag "term" term)))
 
+(defface termint-source-command-hint-face
+  '((t :inherit font-lock-comment-face))
+  "Face used for displaying hint of source command.")
+
 (defvar vterm-buffer-name)
 (defvar vterm-shell)
 (declare-function vterm-send-string "vterm")
@@ -215,6 +219,36 @@ initialized during each `termint-define' call."
             (concat start-pattern string end-pattern))))
     (funcall send-string repl-buffer-name final-string)))
 
+(defun termint--show-source-command-hint (repl-name session original-content source-command)
+  "Display the hint of SOURCE-COMMAND in REPL-BUFFER-NAME.
+The hint of the SOURCE-COMMAND is the first non-empty line of
+ORIGINAL-CONTENT.  The hint will be displayed as overlay in the end of
+line of the REPL-BUFFER-NAME that matches SOURCE-COMMAND."
+  (when-let*
+      ((repl-buffer-name (if session
+                             (format "*%s*<%d>" repl-name session)
+                           (format "*%s*" repl-name)))
+       (first-non-empty-line (lambda (string)
+                               (seq-find (lambda (line) (not (string-empty-p (string-trim line))))
+                                         (split-string string "\n"))))
+       (original-content (funcall first-non-empty-line original-content))
+       (original-content (string-trim original-content))
+       (source-command (funcall first-non-empty-line source-command))
+       (source-command (string-trim source-command)))
+    (run-with-idle-timer
+     0.4 nil
+     (lambda ()
+       (with-current-buffer repl-buffer-name
+         (save-excursion
+           (goto-char (point-max))
+           (when (search-backward source-command nil t nil)
+             (let ((ov (make-overlay (pos-eol) (pos-eol))))
+               (overlay-put ov 'after-string
+                            (propertize (format " %s - %s"
+                                                (format-time-string "%H:%M:%S")
+                                                original-content)
+                                        'face 'termint-source-command-hint-face))))))))))
+
 (defun termint--send-string-term-backend (repl-buffer-name str)
   "Send STR to the process behind REPL-BUFFER-NAME with term backend."
   (with-current-buffer repl-buffer-name
@@ -373,7 +407,12 @@ Here, `{{file}}` serves as a placeholder for the temporary file path,
 which is substituted at runtime.
 
 Use the string format for concise configuration, or the function
-variant for greater flexibility and control."
+variant for greater flexibility and control.
+
+`:show-source-command-hint' Display the first non-empty line of the
+code chunk as overlay.  Alongside the source command sent to the REPL,
+providing a useful hint about the actual command being executed. the
+default value is nil."
 
   (let ((start-func-name (intern (concat "termint-" repl-name "-start")))
         (send-region-func-name (intern (concat "termint-" repl-name "-send-region")))
@@ -388,9 +427,11 @@ variant for greater flexibility and control."
         (end-pattern (or (plist-get args :end-pattern) "\r"))
         (str-process-func (or (plist-get args :str-process-func) ''identity))
         (source-syntax (or (plist-get args :source-syntax) ''identity))
+        (show-source-command-hint (plist-get args :show-source-command-hint))
         (repl-cmd-name (intern (concat "termint-" repl-name "-cmd")))
         (str-process-func-name (intern (concat "termint-" repl-name "-str-process-func")))
         (source-syntax-name (intern (concat "termint-" repl-name "-source-syntax")))
+        (show-source-command-hint-name (intern (concat "termint-" repl-name "-show-source-command-hint")))
         (bracketed-paste-p-name (intern (concat "termint-" repl-name "-use-bracketed-paste-mode")))
         (start-pattern-name (intern (concat "termint-" repl-name "-start-pattern")))
         (end-pattern-name (intern (concat "termint-" repl-name "-end-pattern")))
@@ -414,6 +455,9 @@ variant for greater flexibility and control."
 
        (defvar ,source-syntax-name ,source-syntax
          ,(format "The syntax to source the code content for the %s REPL." repl-name))
+
+       (defvar ,show-source-command-hint-name ,show-source-command-hint
+         ,(format "Whether display the source command hint in %s REPL." repl-name))
 
        (defvar ,bracketed-paste-p-name ,bracketed-paste-p
          ,(format "Whether use bracketed paste mode for sending string to the %s REPL." repl-name))
@@ -450,8 +494,11 @@ With numeric prefix SESSION, send region to the process associated
 with that number." repl-name)
          (interactive "r\nP")
          (let* ((str (buffer-substring-no-properties beg end))
+                (orig-str str)
                 (str (termint--create-source-command str ,source-syntax-name)))
-           (,send-string-func-name str session)))
+           (,send-string-func-name str session)
+           (when ,show-source-command-hint-name
+             (termint--show-source-command-hint ,repl-name session orig-str str))))
 
        (defun ,send-string-func-name (string &optional session)
          ,(format
