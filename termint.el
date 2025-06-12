@@ -220,10 +220,11 @@ initialized during each `termint-define' call."
     (funcall send-string repl-buffer-name final-string)))
 
 (defun termint--show-source-command-hint (repl-name session original-content source-command)
-  "Display the hint of SOURCE-COMMAND in REPL-BUFFER-NAME.
-The hint of the SOURCE-COMMAND is the first non-empty line of
+  "Display the hint of SOURCE-COMMAND.
+The target REPL buffer is specified by REPL-NAME and SESSION.  The
+hint of the SOURCE-COMMAND is the first non-empty line of
 ORIGINAL-CONTENT.  The hint will be displayed as overlay in the end of
-line of the REPL-BUFFER-NAME that matches SOURCE-COMMAND."
+line of that matches SOURCE-COMMAND."
   (when-let*
       ((repl-buffer-name (if session
                              (format "*%s*<%d>" repl-name session)
@@ -298,11 +299,10 @@ line of the REPL-BUFFER-NAME that matches SOURCE-COMMAND."
     (dispatcher repl-name session source-syntax)
   "Get region via DISPATCHER, optionally transform for sourcing, and send.
 DISPATCHER is a function returning a (BEG . END) cons cell for the
-code region.  SEND-STRING-FUNC is the function used to send the final
-string to the REPL.  SESSION is the number for the target REPL
-session.  If SOURCE-SYNTAX is non-nil, transform the region's text
-using SOURCE-SYNTAX via `termint--create-source-command' before
-sending."
+code region.  REPL-NAME is the repl name.  SESSION is the number for
+the target REPL session.  If SOURCE-SYNTAX is non-nil, transform the
+region's text using SOURCE-SYNTAX via `termint--create-source-command'
+before sending."
   (if-let*
       ((region (funcall dispatcher))
        (beg (car region))
