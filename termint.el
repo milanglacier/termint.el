@@ -295,7 +295,7 @@ line of the REPL-BUFFER-NAME that matches SOURCE-COMMAND."
       nil)))
 
 (defun termint--dispatch-region-and-send
-    (dispatcher send-string-func session source-syntax)
+    (dispatcher repl-name session source-syntax)
   "Get region via DISPATCHER, optionally transform for sourcing, and send.
 DISPATCHER is a function returning a (BEG . END) cons cell for the
 code region.  SEND-STRING-FUNC is the function used to send the final
@@ -307,6 +307,7 @@ sending."
       ((region (funcall dispatcher))
        (beg (car region))
        (end (cdr region))
+       (send-string-func (intern (concat "termint-" repl-name "-send-string")))
        (string (buffer-substring-no-properties beg end)))
       (progn
         (when source-syntax
@@ -523,7 +524,7 @@ With numeric prefix SESSION, send paragraph to the process associated
 with that number." repl-name)
          (interactive "P")
          (termint--dispatch-region-and-send
-          #'termint--dispatch-paragraph #',send-string-func-name session nil))
+          #'termint--dispatch-paragraph ,repl-name session nil))
 
        (defun ,source-paragraph-func-name (&optional session)
          ,(format
@@ -532,7 +533,7 @@ With numeric prefix SESSION, send paragraph to the process associated
 with that number." repl-name)
          (interactive "P")
          (termint--dispatch-region-and-send
-          #'termint--dispatch-paragraph #',send-string-func-name
+          #'termint--dispatch-paragraph ,repl-name
           session ,source-syntax-name))
 
        (defun ,send-buffer-func-name (&optional session)
@@ -542,7 +543,7 @@ With numeric prefix SESSION, send buffer to the process associated
 with that number." repl-name)
          (interactive "P")
          (termint--dispatch-region-and-send
-          #'termint--dispatch-buffer #',send-string-func-name session nil))
+          #'termint--dispatch-buffer ,repl-name session nil))
 
        (defun ,source-buffer-func-name (&optional session)
          ,(format
@@ -551,7 +552,7 @@ With numeric prefix SESSION, send buffer to the process associated
 with that number." repl-name)
          (interactive "P")
          (termint--dispatch-region-and-send
-          #'termint--dispatch-buffer #',send-string-func-name
+          #'termint--dispatch-buffer ,repl-name
           session ,source-syntax-name))
 
        (defun ,send-defun-func-name (&optional session)
@@ -561,7 +562,7 @@ With numeric prefix SESSION, send defun to the process associated
 with that number." repl-name)
          (interactive "P")
          (termint--dispatch-region-and-send
-          #'termint--dispatch-defun #',send-string-func-name session nil))
+          #'termint--dispatch-defun ,repl-name session nil))
 
        (defun ,source-defun-func-name (&optional session)
          ,(format
@@ -570,7 +571,7 @@ With numeric prefix SESSION, send defun to the process associated
 with that number." repl-name)
          (interactive "P")
          (termint--dispatch-region-and-send
-          #'termint--dispatch-defun #',send-string-func-name
+          #'termint--dispatch-defun ,repl-name
           session ,source-syntax-name))
 
        (when (require 'evil nil t)
