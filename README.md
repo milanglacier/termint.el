@@ -258,6 +258,9 @@ temporary file handling—such as exposure to malicious attack—could pose secu
 risks. Thus, while beneficial in certain scenarios, this method requires careful
 consideration of its potential drawbacks.
 
+you may consider enabling `:show-source-command-hint` as `t`, which
+provides useful hint about the underlying command being executed.
+
 ## Bracketed-Paste Mode
 
 Bracketed-paste mode wraps pasted text in escape sequences, letting terminals
