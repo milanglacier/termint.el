@@ -139,6 +139,10 @@ customization of the REPL's behavior:
 - `termint-myrepl-str-process-func`: Function to preprocess strings before
   sending.
 - `termint-myrepl-source-syntax`: Template for the command used to source code.
+- `termint-myrepl-show-source-command-hint`: When enabled, display the first
+  non-empty line of the code chunk as overlay. Alongside the source command sent
+  to the REPL, providing a useful hint about the actual command being executed.
+  the default value is nil.
 
 ## Examples
 
