@@ -176,11 +176,11 @@ In the below example, we created two REPL schemas:
 
   ;; C-c m s: `termint-ipython-start'
   ;; C-c m e: `termint-ipython-send-string'
-  ;; C-c m r: `termint-ipython-send-region'
+  ;; C-c m r: `termint-ipython-send-region' (or `termint-ipython-send-region-operator' if evil is installed.)
   ;; C-c m p: `termint-ipython-send-paragraph'
   ;; C-c m b: `termint-ipython-send-buffer'
   ;; C-c m f: `termint-ipython-send-defun'
-  ;; C-c m R: `termint-ipython-source-region'
+  ;; C-c m R: `termint-ipython-source-region' (or `termint-ipython-source-region-operator' if evil is installed.)
   ;; C-c m P: `termint-ipython-source-paragraph'
   ;; C-c m B: `termint-ipython-source-buffer'
   ;; C-c m F: `termint-ipython-source-defun'
