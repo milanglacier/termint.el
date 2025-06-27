@@ -195,7 +195,7 @@ In the below example, we created two REPL schemas:
 
 (use-package termint
   :bind (("C-c Z" . termint-zsh-start))
-  :bind-keymap (("C-c z" . termint-zsh-map))
+  :bind-keymap ("C-c z" . termint-zsh-map)
 
   :config
   (setq termint-backend 'eat)
