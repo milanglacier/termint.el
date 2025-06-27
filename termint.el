@@ -144,7 +144,7 @@ without a number is considered as session 0."
   (setq session (termint--get-session-suffix session))
   (let* ((eat-buffer-name repl-buffer-name)
          (eat-shell repl-shell)
-         (buffer (eat nil session)))
+         (buffer (eat eat-shell session)))
     (with-current-buffer buffer
       (termint-mode 1))
     buffer))
