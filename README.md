@@ -143,6 +143,12 @@ customization of the REPL's behavior:
   non-empty line of the code chunk as overlay. Alongside the source command sent
   to the REPL, providing a useful hint about the actual command being executed.
   the default value is nil.
+- `termint-myrepl-send-delayed-final-ret`: When enabled, send the final return
+  with a slight delay. Some REPLs may not properly recognize when a large chunk
+  of text sent with bracketed paste mode has finished being input and needs to
+  be evaluated. This option should generally remain false (the default), with
+  Claude Code being a notable exception that requires it to be set to true. PRs
+  are welcome if other REPLs are found to need this option enabled.
 
 ## Examples
 
@@ -151,10 +157,9 @@ the derived commands. To address this, we recommend configuring `termint` using
 `use-package`, which provides advanced lazy-loading functionality out of the
 box.
 
-We also recommend declare **separate** `use-package` forms for each
-REPL schema.  This structure allows you to activate specific REPL
-commands as long as their corresponding programming language mode
-loads.
+We also recommend declare **separate** `use-package` forms for each REPL schema.
+This structure allows you to activate specific REPL commands as long as their
+corresponding programming language mode loads.
 
 In the below example, we created two REPL schemas:
 
@@ -262,8 +267,8 @@ temporary file handling—such as exposure to malicious attack—could pose secu
 risks. Thus, while beneficial in certain scenarios, this method requires careful
 consideration of its potential drawbacks.
 
-you may consider enabling `:show-source-command-hint` as `t`, which
-provides useful hint about the underlying command being executed.
+you may consider enabling `:show-source-command-hint` as `t`, which provides
+useful hint about the underlying command being executed.
 
 ## Bracketed-Paste Mode
 

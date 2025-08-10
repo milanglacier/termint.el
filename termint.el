@@ -181,12 +181,13 @@ without a number is considered as session 0."
      start-pattern
      end-pattern
      bracketed-paste-p
-     str-process-func)
+     str-process-func
+     send-delayed-final-ret)
   "Send STRING to a REPL.
 The target REPL buffer is specified by REPL-NAME and SESSION.
 Additional parameters—START-PATTERN, END-PATTERN, BRACKETED-PASTE-P,
-and STR-PROCESS-FUNC—are variables associated with REPL-NAME,
-initialized during each `termint-define' call."
+STR-PROCESS-FUNC, and SEND-DELAYED-FINAL-RET—are variables associated
+with REPL-NAME, initialized during each `termint-define' call."
   (setq session (termint--get-session-suffix session))
   (let* ((repl-buffer-name
           (if session
@@ -217,7 +218,11 @@ initialized during each `termint-define' call."
                       (and bracketed-paste-p bracketed-paste-end)
                       end-pattern)
             (concat start-pattern string end-pattern))))
-    (funcall send-string repl-buffer-name final-string)))
+    (funcall send-string repl-buffer-name final-string)
+    (when send-delayed-final-ret
+      (run-with-timer 0.3 nil
+                      (lambda ()
+                        (funcall send-string repl-buffer-name "\r"))))))
 
 (defun termint--show-source-command-hint (repl-name session original-content source-command)
   "Display the hint of SOURCE-COMMAND.
@@ -414,7 +419,18 @@ variant for greater flexibility and control.
 `:show-source-command-hint' Display the first non-empty line of the
 code chunk as overlay.  Alongside the source command sent to the REPL,
 providing a useful hint about the actual command being executed. the
-default value is nil."
+default value is nil.
+
+`:send-delayed-final-ret' Send the final return with a slight delay.
+Some REPLs may not properly recognize when a large chunk of text sent
+with bracketed paste mode has finished being input and needs to be
+evaluated.  Normally, a final return character signals the REPL to
+execute the command, but certain REPLs require a brief delay before
+this final return to properly process the bracketed paste input.  This
+option should generally remain false (the default), with Claude Code
+being a notable exception that requires it to be set to true.
+Contributions are welcome if other REPLs are found to need this option
+enabled.  The default value is nil."
 
   (let ((start-func-name (intern (concat "termint-" repl-name "-start")))
         (send-region-func-name (intern (concat "termint-" repl-name "-send-region")))
@@ -430,6 +446,7 @@ default value is nil."
         (str-process-func (or (plist-get args :str-process-func) ''identity))
         (source-syntax (or (plist-get args :source-syntax) ''identity))
         (show-source-command-hint (plist-get args :show-source-command-hint))
+        (send-delayed-final-ret (plist-get args :send-delayed-final-ret))
         (repl-cmd-name (intern (concat "termint-" repl-name "-cmd")))
         (str-process-func-name (intern (concat "termint-" repl-name "-str-process-func")))
         (source-syntax-name (intern (concat "termint-" repl-name "-source-syntax")))
@@ -437,6 +454,7 @@ default value is nil."
         (bracketed-paste-p-name (intern (concat "termint-" repl-name "-use-bracketed-paste-mode")))
         (start-pattern-name (intern (concat "termint-" repl-name "-start-pattern")))
         (end-pattern-name (intern (concat "termint-" repl-name "-end-pattern")))
+        (send-delayed-final-ret-name (intern (concat "termint-" repl-name "-send-delayed-final-ret")))
         ;; send paragraph and source paragraph
         (send-paragraph-func-name (intern (concat "termint-" repl-name "-send-paragraph")))
         (source-paragraph-func-name (intern (concat "termint-" repl-name "-source-paragraph")))
@@ -469,6 +487,9 @@ default value is nil."
 
        (defvar ,end-pattern-name ,end-pattern
          ,(format "The last string to send to the %s REPL after sending the text." repl-name))
+
+       (defvar ,send-delayed-final-ret-name ,send-delayed-final-ret
+         ,(format "Whether to send the final return with a slight delay for the %s REPL." repl-name))
 
        (defun ,start-func-name (&optional session)
          ,(format
@@ -516,7 +537,8 @@ process with that number."
                                ,start-pattern-name
                                ,end-pattern-name
                                ,bracketed-paste-p-name
-                               ,str-process-func-name))
+                               ,str-process-func-name
+                               ,send-delayed-final-ret-name))
 
        (defun ,send-paragraph-func-name (&optional session)
          ,(format
