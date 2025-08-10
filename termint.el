@@ -4,7 +4,7 @@
 ;; Maintainer: Milan Glacier <dev@milanglacier.com>
 ;; Version: 0.1
 ;; URL: https://github.com/milanglacier/termint.el
-;; Package-Requires: ((emacs "29"))
+;; Package-Requires: ((emacs "29.1"))
 
 ;;; This file is NOT part of GNU Emacs
 
