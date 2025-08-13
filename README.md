@@ -164,7 +164,7 @@ corresponding programming language mode loads.
 In the below example, we created two REPL schemas:
 
 1. `ipython` - loads with Python mode
-2. `zsh` - lazy-loaded with global keybindings
+2. `claude-code` - lazy-loaded with global keybindings
 
 ```emacs-lisp
 (use-package termint
@@ -199,13 +199,17 @@ In the below example, we created two REPL schemas:
     python-ts-mode-map (kbd "SPC R") #'termint-ipython-source-region-operator))
 
 (use-package termint
-  :bind (("C-c Z" . termint-zsh-start))
-  :bind-keymap ("C-c z" . termint-zsh-map)
+  :bind (("C-c C" . termint-claude-code-start))
+  :bind-keymap ("C-c c" . termint-claude-code-map)
 
   :config
   (setq termint-backend 'eat)
-  (termint-define "zsh" "zsh" :bracketed-paste-p t
-                  :source-syntax termint-bash-source-syntax-template))
+  (termint-define "claude-code" "claude" :bracketed-paste-p t
+                  ;; In most cases, there is no need to configure
+                  ;; :send-delayed-final-ret; the default value suffices.
+                  ;; However, for claude-code, it should be explicitly set to t.
+                  :send-delayed-final-ret t
+                  :source-syntax "@{{file}}"))
 
 ```
 
