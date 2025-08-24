@@ -349,7 +349,6 @@ REPL-NAME."
 
 
 
-;;;###autoload
 (defmacro termint-define (repl-name repl-cmd &rest args)
   "Define a REPL schema.
 
