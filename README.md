@@ -143,12 +143,14 @@ customization of the REPL's behavior:
   non-empty line of the code chunk as overlay. Alongside the source command sent
   to the REPL, providing a useful hint about the actual command being executed.
   the default value is nil.
-- `termint-myrepl-send-delayed-final-ret`: When enabled, send the final return
-  with a slight delay. Some REPLs may not properly recognize when a large chunk
-  of text sent with bracketed paste mode has finished being input and needs to
-  be evaluated. This option should generally remain false (the default), with
-  Claude Code being a notable exception that requires it to be set to true. PRs
-  are welcome if other REPLs are found to need this option enabled.
+- `termint-myrepl-send-delayed-final-ret`: When enabled, send the
+  final return with a slight delay. Some REPLs may not properly
+  recognize when a large chunk of text sent with bracketed paste mode
+  has finished being input and needs to be evaluated. This option
+  should generally remain false (the default), with Claude Code and
+  OpenAI Codex being notable exceptions that require to set to
+  true. PRs are welcome if other REPLs are found to need this option
+  enabled.
 
 ## Examples
 
@@ -210,6 +212,12 @@ In the below example, we created two REPL schemas:
                   ;; However, for claude-code, it should be explicitly set to t.
                   :send-delayed-final-ret t
                   :source-syntax "@{{file}}"))
+
+;; Codex is also required to enable :send-delayed-final-ret
+(termint-define "codex" "codex" :bracketed-paste-p t
+                :source-syntax "Read the instruction from {{file}}"
+                :end-pattern ""
+                :send-delayed-final-ret t)
 
 ```
 
