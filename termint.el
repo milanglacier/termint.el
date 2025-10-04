@@ -199,9 +199,6 @@ without a number is considered as session 0."
                  #'termint--rearrange-session-on-buffer-exit
                  t)))
 
-
-
-
 (defun termint--send-string
     (string
      repl-name
@@ -370,19 +367,15 @@ REPL-NAME."
         (replace-regexp-in-string "{{file}}" file source-syntax))
     (funcall source-syntax str)))
 
-
-
-
-
-
-(defmacro termint-define (repl-name repl-cmd &rest args)
-  "Define a REPL schema.
+;;;###autoload
+(defun termint-define (repl-name repl-cmd &rest args)
+  "Define a REPL schema at runtime.
 
 The REPL session will be created via `termint-backend'.  The schema
-includes three functions: one to start the REPL, one to send the
-region and corresponding Evil operator (for Evil users), and one to
+includes three primary commands: one to start the REPL, one to send
+the region (with an Evil operator companion for Evil users), and one to
 hide the REPL window if it exists.  A keymap, `termint-REPL-NAME-map', is
-also included for these commands.
+also created for these commands.
 
 REPL-NAME is a string, REPL-CMD is a string, a form evaluated to a
 string, or a function evaluated to a string.  ARGS is a plist, the
@@ -393,7 +386,7 @@ mode, the default value is nil.  You can change the behavior at run
 time by setting the generated variable
 `termint-REPL-NAME-use-bracketed-paste-mode'.
 
-`:start-pattern' the first string to send to the REPl before sending
+`:start-pattern' the first string to send to the REPL before sending
 the region.  The default is \"\".  You can change the behavior at run
 time by setting the generated variable
 `termint-REPL-NAME-start-pattern'.  Additionally, the value can be a
@@ -468,8 +461,8 @@ enabled.  The default value is nil."
         (bracketed-paste-p (plist-get args :bracketed-paste-p))
         (start-pattern (or (plist-get args :start-pattern) ""))
         (end-pattern (or (plist-get args :end-pattern) "\r"))
-        (str-process-func (or (plist-get args :str-process-func) ''identity))
-        (source-syntax (or (plist-get args :source-syntax) ''identity))
+        (str-process-func (or (plist-get args :str-process-func) #'identity))
+        (source-syntax (or (plist-get args :source-syntax) #'identity))
         (show-source-command-hint (plist-get args :show-source-command-hint))
         (send-delayed-final-ret (plist-get args :send-delayed-final-ret))
         (repl-cmd-name (intern (concat "termint-" repl-name "-cmd")))
@@ -480,193 +473,210 @@ enabled.  The default value is nil."
         (start-pattern-name (intern (concat "termint-" repl-name "-start-pattern")))
         (end-pattern-name (intern (concat "termint-" repl-name "-end-pattern")))
         (send-delayed-final-ret-name (intern (concat "termint-" repl-name "-send-delayed-final-ret")))
-        ;; send paragraph and source paragraph
         (send-paragraph-func-name (intern (concat "termint-" repl-name "-send-paragraph")))
         (source-paragraph-func-name (intern (concat "termint-" repl-name "-source-paragraph")))
-        ;; send buffer and source buffer
         (send-buffer-func-name (intern (concat "termint-" repl-name "-send-buffer")))
         (source-buffer-func-name (intern (concat "termint-" repl-name "-source-buffer")))
-        ;; send defun and source defun
         (send-defun-func-name (intern (concat "termint-" repl-name "-send-defun")))
         (source-defun-func-name (intern (concat "termint-" repl-name "-source-defun"))))
 
-    `(progn
+    (defvar-1 repl-cmd-name repl-cmd
+      (format "The shell command for the %s REPL." repl-name))
 
-       (defvar ,repl-cmd-name ,repl-cmd
-         ,(format "The shell command for the %s REPL." repl-name))
+    (defvar-1 str-process-func-name str-process-func
+      (format "The function to process the string before sending it to the %s REPL." repl-name))
 
-       (defvar ,str-process-func-name ,str-process-func
-         ,(format "The function to process the string before sending it to the %s REPL." repl-name))
+    (defvar-1 source-syntax-name source-syntax
+      (format "The syntax to source the code content for the %s REPL." repl-name))
 
-       (defvar ,source-syntax-name ,source-syntax
-         ,(format "The syntax to source the code content for the %s REPL." repl-name))
+    (defvar-1 show-source-command-hint-name show-source-command-hint
+      (format "Whether display the source command hint in %s REPL." repl-name))
 
-       (defvar ,show-source-command-hint-name ,show-source-command-hint
-         ,(format "Whether display the source command hint in %s REPL." repl-name))
+    (defvar-1 bracketed-paste-p-name bracketed-paste-p
+      (format "Whether use bracketed paste mode for sending string to the %s REPL." repl-name))
 
-       (defvar ,bracketed-paste-p-name ,bracketed-paste-p
-         ,(format "Whether use bracketed paste mode for sending string to the %s REPL." repl-name))
+    (defvar-1 start-pattern-name start-pattern
+      (format "The first string to send to the %s REPL before sending the text." repl-name))
 
-       (defvar ,start-pattern-name ,start-pattern
-         ,(format "The first string to send to the %s REPL before sending the text." repl-name))
+    (defvar-1 end-pattern-name end-pattern
+      (format "The last string to send to the %s REPL after sending the text." repl-name))
 
-       (defvar ,end-pattern-name ,end-pattern
-         ,(format "The last string to send to the %s REPL after sending the text." repl-name))
+    (defvar-1 send-delayed-final-ret-name send-delayed-final-ret
+      (format "Whether to send the final return with a slight delay for the %s REPL." repl-name))
 
-       (defvar ,send-delayed-final-ret-name ,send-delayed-final-ret
-         ,(format "Whether to send the final return with a slight delay for the %s REPL." repl-name))
-
-       (defun ,start-func-name (&optional session)
-         ,(format
-           "Create a %s REPL buffer.
+    (let ((doc (format
+                "Create a %s REPL buffer.
 Start a new %s session or switch to an already active session. Return
 the buffer selected (or created). With a numeric prefix SESSION,
 create or switch to the session with that number as a suffix."
-           repl-name repl-name)
-         (interactive "P")
-         (termint--start ,repl-name ,repl-cmd-name session))
+                repl-name repl-name)))
+      (defalias start-func-name
+        (lambda (&optional session)
+          (interactive "P")
+          (termint--start repl-name (symbol-value repl-cmd-name) session))
+        doc))
 
-       (defun ,send-region-func-name (beg end &optional session)
-         ,(format
-           "Send the region delimited by BEG and END to %s.
+    (let ((doc (format
+                "Send the region delimited by BEG and END to %s.
 With numeric prefix SESSION, send region to the process associated
-with that number." repl-name)
-         (interactive "r\nP")
-         (let ((str (buffer-substring-no-properties beg end)))
-           (,send-string-func-name str session)))
+with that number." repl-name)))
+      (defalias send-region-func-name
+        (lambda (beg end &optional session)
+          (interactive "r\nP")
+          (let ((str (buffer-substring-no-properties beg end)))
+            (funcall send-string-func-name str session)))
+        doc))
 
-       (defun ,source-region-func-name (beg end &optional session)
-         ,(format
-           "Source the region delimited by BEG and END to %s.
+    (let ((doc (format
+                "Source the region delimited by BEG and END to %s.
 With numeric prefix SESSION, send region to the process associated
-with that number." repl-name)
-         (interactive "r\nP")
-         (let* ((str (buffer-substring-no-properties beg end))
-                (orig-str str)
-                (str (termint--create-source-command str ,source-syntax-name)))
-           (,send-string-func-name str session)
-           (when ,show-source-command-hint-name
-             (termint--show-source-command-hint ,repl-name session orig-str str))))
+with that number." repl-name)))
+      (defalias source-region-func-name
+        (lambda (beg end &optional session)
+          (interactive "r\nP")
+          (let* ((str (buffer-substring-no-properties beg end))
+                 (orig-str str)
+                 (source-str (termint--create-source-command str (symbol-value source-syntax-name))))
+            (funcall send-string-func-name source-str session)
+            (when (symbol-value show-source-command-hint-name)
+              (termint--show-source-command-hint repl-name session orig-str source-str))))
+        doc))
 
-       (defun ,send-string-func-name (string &optional session)
-         ,(format
-           "Send the STRING to %s.
+    (let ((doc (format
+                "Send the STRING to %s.
 When invoked interactively, prompt for user input in the minibuffer.
 If a numeric prefix SESSION is provided, send the string to the
-process with that number."
-           repl-name)
-         (interactive "sinput your command: \nP")
-         (termint--send-string string
-                               ,repl-name
-                               session
-                               ,start-pattern-name
-                               ,end-pattern-name
-                               ,bracketed-paste-p-name
-                               ,str-process-func-name
-                               ,send-delayed-final-ret-name))
+process with that number." repl-name)))
+      (defalias send-string-func-name
+        (lambda (string &optional session)
+          (interactive "sinput your command: \nP")
+          (termint--send-string string
+                                repl-name
+                                session
+                                (symbol-value start-pattern-name)
+                                (symbol-value end-pattern-name)
+                                (symbol-value bracketed-paste-p-name)
+                                (symbol-value str-process-func-name)
+                                (symbol-value send-delayed-final-ret-name)))
+        doc))
 
-       (defun ,send-paragraph-func-name (&optional session)
-         ,(format
-           "Send the current paragraph to %s.
+    (let ((doc (format
+                "Send the current paragraph to %s.
 With numeric prefix SESSION, send paragraph to the process associated
-with that number." repl-name)
-         (interactive "P")
-         (termint--dispatch-region-and-send
-          #'termint--dispatch-paragraph ,repl-name session nil))
+with that number." repl-name)))
+      (defalias send-paragraph-func-name
+        (lambda (&optional session)
+          (interactive "P")
+          (termint--dispatch-region-and-send
+           #'termint--dispatch-paragraph repl-name session nil))
+        doc))
 
-       (defun ,source-paragraph-func-name (&optional session)
-         ,(format
-           "Source the current paragraph to %s.
+    (let ((doc (format
+                "Source the current paragraph to %s.
 With numeric prefix SESSION, send paragraph to the process associated
-with that number." repl-name)
-         (interactive "P")
-         (termint--dispatch-region-and-send
-          #'termint--dispatch-paragraph ,repl-name
-          session ,source-syntax-name))
+with that number." repl-name)))
+      (defalias source-paragraph-func-name
+        (lambda (&optional session)
+          (interactive "P")
+          (termint--dispatch-region-and-send
+           #'termint--dispatch-paragraph repl-name session
+           (symbol-value source-syntax-name)))
+        doc))
 
-       (defun ,send-buffer-func-name (&optional session)
-         ,(format
-           "Send the current buffer to %s.
+    (let ((doc (format
+                "Send the current buffer to %s.
 With numeric prefix SESSION, send buffer to the process associated
-with that number." repl-name)
-         (interactive "P")
-         (termint--dispatch-region-and-send
-          #'termint--dispatch-buffer ,repl-name session nil))
+with that number." repl-name)))
+      (defalias send-buffer-func-name
+        (lambda (&optional session)
+          (interactive "P")
+          (termint--dispatch-region-and-send
+           #'termint--dispatch-buffer repl-name session nil))
+        doc))
 
-       (defun ,source-buffer-func-name (&optional session)
-         ,(format
-           "Source the current buffer to %s.
+    (let ((doc (format
+                "Source the current buffer to %s.
 With numeric prefix SESSION, send buffer to the process associated
-with that number." repl-name)
-         (interactive "P")
-         (termint--dispatch-region-and-send
-          #'termint--dispatch-buffer ,repl-name
-          session ,source-syntax-name))
+with that number." repl-name)))
+      (defalias source-buffer-func-name
+        (lambda (&optional session)
+          (interactive "P")
+          (termint--dispatch-region-and-send
+           #'termint--dispatch-buffer repl-name session
+           (symbol-value source-syntax-name)))
+        doc))
 
-       (defun ,send-defun-func-name (&optional session)
-         ,(format
-           "Send the current defun to %s.
+    (let ((doc (format
+                "Send the current defun to %s.
 With numeric prefix SESSION, send defun to the process associated
-with that number." repl-name)
-         (interactive "P")
-         (termint--dispatch-region-and-send
-          #'termint--dispatch-defun ,repl-name session nil))
+with that number." repl-name)))
+      (defalias send-defun-func-name
+        (lambda (&optional session)
+          (interactive "P")
+          (termint--dispatch-region-and-send
+           #'termint--dispatch-defun repl-name session nil))
+        doc))
 
-       (defun ,source-defun-func-name (&optional session)
-         ,(format
-           "Source the current defun to %s.
+    (let ((doc (format
+                "Source the current defun to %s.
 With numeric prefix SESSION, send defun to the process associated
-with that number." repl-name)
-         (interactive "P")
-         (termint--dispatch-region-and-send
-          #'termint--dispatch-defun ,repl-name
-          session ,source-syntax-name))
+with that number." repl-name)))
+      (defalias source-defun-func-name
+        (lambda (&optional session)
+          (interactive "P")
+          (termint--dispatch-region-and-send
+           #'termint--dispatch-defun repl-name session
+           (symbol-value source-syntax-name)))
+        doc))
 
-       (when (require 'evil nil t)
-         (evil-define-operator ,send-region-operator-name (beg end session)
-           ,(format
-             "Evil operator for sending text objects, motions, or regions to %s.
-With a numeric prefix SESSION, send the region to the %s process
-associated with that number" repl-name repl-name)
-           :move-point nil
-           (interactive "<r>P")
-           (,send-region-func-name beg end session))
-
-         (evil-define-operator ,source-region-operator-name (beg end session)
-           ,(format
-             "Evil operator for sourcing text objects, motions, or regions to %s.
-With a numeric prefix SESSION, send the region to the %s process
-associated with that number" repl-name repl-name)
-           :move-point nil
-           (interactive "<r>P")
-           (,source-region-func-name beg end session)))
-
-       (defun ,hide-window-func-name (&optional session)
-         ,(format
-           "hide the %s window.
+    (let ((doc (format
+                "hide the %s window.
 With numeric prefix SESSION, hide the window with that number as a
-suffix." repl-name)
-         (interactive "P")
-         (termint--hide-window ,repl-name session))
+suffix." repl-name)))
+      (defalias hide-window-func-name
+        (lambda (&optional session)
+          (interactive "P")
+          (termint--hide-window repl-name session))
+        doc))
 
-       (defvar ,keymap-name
-         (let ((map (make-sparse-keymap)))
-           (define-key map "s" #',start-func-name)
-           (define-key map "r" #',send-region-func-name)
-           (define-key map "R" #',source-region-func-name)
-           (define-key map "e" #',send-string-func-name)
-           (define-key map "p" #',send-paragraph-func-name)
-           (define-key map "f" #',send-defun-func-name)
-           (define-key map "P" #',source-paragraph-func-name)
-           (define-key map "b" #',send-buffer-func-name)
-           (define-key map "B" #',source-buffer-func-name)
-           (define-key map "F" #',source-defun-func-name)
-           (define-key map "h" #',hide-window-func-name)
-           (when (require 'evil nil t)
-             (define-key map "r" #',send-region-operator-name)
-             (define-key map "R" #',source-region-operator-name))
-           map)
-         ,(format "Keymap for %s REPL commands." repl-name)))))
+    (when (require 'evil nil t)
+      (eval
+       `(evil-define-operator ,send-region-operator-name (beg end session)
+          ,(format
+            "Evil operator for sending text objects, motions, or regions to %s.
+With a numeric prefix SESSION, send the region to the %s process
+associated with that number" repl-name repl-name)
+          :move-point nil
+          (interactive "<r>P")
+          (funcall #',send-region-func-name beg end session)))
+      (eval
+       `(evil-define-operator ,source-region-operator-name (beg end session)
+          ,(format
+            "Evil operator for sourcing text objects, motions, or regions to %s.
+With a numeric prefix SESSION, send the region to the %s process
+associated with that number" repl-name repl-name)
+          :move-point nil
+          (interactive "<r>P")
+          (funcall #',source-region-func-name beg end session))))
+
+    (defvar-1 keymap-name
+      (let ((map (make-sparse-keymap)))
+        (define-key map "s" start-func-name)
+        (define-key map "r" send-region-func-name)
+        (define-key map "R" source-region-func-name)
+        (define-key map "e" send-string-func-name)
+        (define-key map "p" send-paragraph-func-name)
+        (define-key map "f" send-defun-func-name)
+        (define-key map "P" source-paragraph-func-name)
+        (define-key map "b" send-buffer-func-name)
+        (define-key map "B" source-buffer-func-name)
+        (define-key map "F" source-defun-func-name)
+        (define-key map "h" hide-window-func-name)
+        (when (require 'evil nil t)
+          (define-key map "r" send-region-operator-name)
+          (define-key map "R" source-region-operator-name))
+        map)
+      (format "Keymap for %s REPL commands." repl-name))))
 
 (defun termint--make-tmp-file (str &optional keep-file)
   "Create a temporary file with STR.
