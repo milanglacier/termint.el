@@ -46,7 +46,7 @@
 
 ;; termint provides a flexible way to define and manage interactions
 ;; with REPLs and CLI apps running inside a terminal emulator backend
-;; within Emacs. It allows you to easily configure how Emacs
+;; within Emacs.  It allows you to easily configure how Emacs
 ;; communicates with different REPLs, leveraging the capabilities of
 ;; fully-featured terminal emulators like `term', `vterm', or `eat'.
 
@@ -69,7 +69,9 @@
   :group 'tools)
 
 (defcustom termint-backend 'term
-  "The backend to use for REPL sessions."
+  "The backend to use for REPL sessions.
+Supported backends include `eat', `vterm', and the built-in `term'.
+Note that `eat' and `vterm' must be installed separately."
   :type '(choice (const :tag "eat" eat)
                  (const :tag "vterm" vterm)
                  (const :tag "term" term)))
@@ -107,11 +109,11 @@
 REPL-NAME is used to determine the buffer name, REPL-CMD is used to
 determine the shell command.  SESSION is a numeric suffix for the
 buffer name."
-  (let* ((repl-buffer-name (format "*%s*" repl-name))
-         (repl-shell (if (functionp repl-cmd)
-                         (funcall repl-cmd)
-                       repl-cmd)))
-    (pcase termint-backend
+  (let ((repl-buffer-name (format "*%s*" repl-name))
+        (repl-shell (if (functionp repl-cmd)
+                        (funcall repl-cmd)
+                      repl-cmd)))
+    (pcase-exhaustive termint-backend
       ('eat (termint--start-eat-backend repl-buffer-name repl-shell session))
       ('vterm (termint--start-vterm-backend repl-buffer-name repl-shell session))
       ('term
@@ -126,14 +128,14 @@ without a number is considered as session 0."
   (interactive)
   (when-let* ((buffer-name (prog1 (buffer-name)
                              (rename-buffer (concat (buffer-name) "--tmp"))))
-              (repl-name (when (string-match "^\\*\\(.*\\)\\*" buffer-name)
-                           (match-string 1 buffer-name)))
+              (repl-name (and (string-match "^\\*\\(.*\\)\\*" buffer-name)
+                              (match-string 1 buffer-name)))
               (sessions (seq-filter
                          #'get-buffer
-                         `(,(format "*%s*" repl-name)
-                           ,@(mapcar
-                              (lambda (x) (format "*%s*<%d>" repl-name x))
-                              (number-sequence 1 9))))))
+                         (cons (format "*%s*" repl-name)
+                               (mapcar
+                                (lambda (x) (format "*%s*<%d>" repl-name x))
+                                (number-sequence 1 9))))))
     (cl-loop for session in sessions
              for idx from 0
              do (with-current-buffer session
@@ -228,14 +230,12 @@ with REPL-NAME, initialized during each `termint-define' call."
          (bracketed-paste-start "\e[200~")
          (bracketed-paste-end "\e[201~")
          (string (funcall str-process-func string))
-         (start-pattern (if (stringp start-pattern) start-pattern
-                          (if multi-lines-p
-                              (plist-get start-pattern :multi-lines)
-                            (plist-get start-pattern :single-line))))
-         (end-pattern (if (stringp end-pattern) end-pattern
-                        (if multi-lines-p
-                            (plist-get end-pattern :multi-lines)
-                          (plist-get end-pattern :single-line))))
+         (start-pattern (cond ((stringp start-pattern) start-pattern)
+                              (multi-lines-p (plist-get start-pattern :multi-lines))
+                              (t (plist-get start-pattern :single-line))))
+         (end-pattern (cond ((stringp end-pattern) end-pattern)
+                            (multi-lines-p (plist-get end-pattern :multi-lines))
+                            (t (plist-get end-pattern :single-line))))
          (final-string
           (if multi-lines-p
               (concat start-pattern
@@ -317,10 +317,10 @@ line of that matches SOURCE-COMMAND."
   (save-excursion
     (if-let*
         ((beg (and
-               (funcall #'beginning-of-defun nil)
+               (beginning-of-defun)
                (point)))
          (end (progn
-                (funcall #'end-of-defun nil)
+                (end-of-defun)
                 (point))))
         (cons beg end)
       (message "No defun found at point")
