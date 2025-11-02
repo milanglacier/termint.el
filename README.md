@@ -1,3 +1,11 @@
+[![GNU ELPA badge][gnu-elpa-badge]][gnu-elpa-link]
+[![MELPA badge][melpa-badge]][melpa-link]
+
+[gnu-elpa-link]: https://elpa.gnu.org/packages/termint.html
+[gnu-elpa-badge]: https://elpa.gnu.org/packages/termint.svg
+[melpa-link]: https://melpa.org/#/termint
+[melpa-badge]: https://melpa.org/packages/termint-badge.svg
+
 **Run REPLs in a terminal emulator backend**
 
 `termint.el` provides a flexible way to define and manage interactions with
@@ -39,8 +47,8 @@ sessions, send code snippets, source files, and manage the REPL window.
 
 # Installation
 
-`termint` is available on the MELPA package repository. You can install it using
-your preferred package manager.
+`termint` is available on the ELPA and MELPA package repository. You
+can install it using your preferred package manager.
 
 ```emacs-lisp
 (package-install 'termint)
