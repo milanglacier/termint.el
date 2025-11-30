@@ -64,6 +64,22 @@
 
 (require 'cl-lib)
 
+(defvar vterm-buffer-name)
+(defvar vterm-shell)
+(declare-function vterm-send-string "vterm")
+(declare-function vterm "vterm")
+
+(defvar eat-buffer-name)
+(defvar eat-shell)
+(declare-function eat "eat")
+(declare-function eat--send-string "eat")
+(declare-function eat--synchronize-scroll "eat")
+
+(declare-function term-exec "term")
+(declare-function term-mode "term")
+(declare-function term-char-mode "term")
+(declare-function term-send-raw-string "term")
+
 (defgroup termint nil
   "Group for termint."
   :group 'tools)
@@ -80,21 +96,47 @@ Note that `eat' and `vterm' must be installed separately."
   '((t :inherit font-lock-comment-face))
   "Face used for displaying hint of source command.")
 
-(defvar vterm-buffer-name)
-(defvar vterm-shell)
-(declare-function vterm-send-string "vterm")
-(declare-function vterm "vterm")
+(defcustom termint-region-dispatchers
+  '(("paragraph" . termint--dispatch-paragraph)
+    ("buffer" . termint--dispatch-buffer)
+    ("defun" . termint--dispatch-defun))
+  "Alist mapping dispatchable region types to dispatcher functions.
+Each element is of the form (NAME . DISPATCHER).  The NAME is appended
+to generated command names (e.g., `termint-ipython-send-NAME' and
+`termint-ipython-source-NAME' for an ipython schema), while DISPATCHER
+should be a function returning a cons cell (BEG . END) for the
+corresponding region.  Customize this before calling `termint-define'
+to generate additional region commands automatically for each REPL
+schema."
+  :type '(alist :key-type string :value-type function))
 
-(defvar eat-buffer-name)
-(defvar eat-shell)
-(declare-function eat "eat")
-(declare-function eat--send-string "eat")
-(declare-function eat--synchronize-scroll "eat")
+(defcustom termint-schema-custom-commands nil
+  "Alist of extra commands generated for each REPL schema.
+Each element takes the form (SUFFIX . FN).  SUFFIX is a string
+appended to `termint-REPL-NAME-` to create the final command name for
+every schema defined via `termint-define`.  FN is the function invoked
+by the generated command.  It receives two arguments: REPL-NAME and
+SESSION.  See `termint--hide-window` for a reference implementation of
+the expected function signature.  Configure this variable before
+invoking `termint-define` to ensure the custom commands are
+generated."
+  :type '(alist :key-type string :value-type function))
 
-(declare-function term-exec "term")
-(declare-function term-mode "term")
-(declare-function term-char-mode "term")
-(declare-function term-send-raw-string "term")
+(defcustom termint-mode-map-additional-keys
+  '(("f" . "send-defun")
+    ("F" . "source-defun")
+    ("b" . "send-buffer")
+    ("B" . "source-buffer")
+    ("p" . "send-paragraph")
+    ("P" . "source-paragraph"))
+  "Alist of keys and command suffixes to add to generated REPL keymaps.
+Each element is a cons cell of the form (KEY . SUFFIX).  KEY is the
+string sequence to bind.  SUFFIX is a string appended to
+`termint-REPL-NAME-' to resolve the actual command symbol (e.g.,
+\"send-defun\" becomes `termint-ipython-send-defun' when defining an
+ipython REPL).  This variable should be modified before calling
+`termint-define' to affect the generated keymaps."
+  :type '(alist :key-type string :value-type string))
 
 
 
@@ -326,48 +368,6 @@ line of that matches SOURCE-COMMAND."
         (cons beg end)
       (message "No defun found at point")
       nil)))
-
-(defcustom termint-region-dispatchers
-  '(("paragraph" . termint--dispatch-paragraph)
-    ("buffer" . termint--dispatch-buffer)
-    ("defun" . termint--dispatch-defun))
-  "Alist mapping dispatchable region types to dispatcher functions.
-Each element is of the form (NAME . DISPATCHER).  The NAME is appended
-to generated command names (e.g., `termint-ipython-send-NAME' and
-`termint-ipython-source-NAME' for an ipython schema), while DISPATCHER
-should be a function returning a cons cell (BEG . END) for the
-corresponding region.  Customize this before calling `termint-define'
-to generate additional region commands automatically for each REPL
-schema."
-  :type '(alist :key-type string :value-type function))
-
-(defcustom termint-schema-custom-commands nil
-  "Alist of extra commands generated for each REPL schema.
-Each element takes the form (SUFFIX . FN).  SUFFIX is a string
-appended to `termint-REPL-NAME-` to create the final command name for
-every schema defined via `termint-define`.  FN is the function invoked
-by the generated command.  It receives two arguments: REPL-NAME and
-SESSION.  See `termint--hide-window` for a reference implementation of
-the expected function signature.  Configure this variable before
-invoking `termint-define` to ensure the custom commands are
-generated."
-  :type '(alist :key-type string :value-type function))
-
-(defcustom termint-mode-map-additional-keys
-  '(("f" . "send-defun")
-    ("F" . "source-defun")
-    ("b" . "send-buffer")
-    ("B" . "source-buffer")
-    ("p" . "send-paragraph")
-    ("P" . "source-paragraph"))
-  "Alist of keys and command suffixes to add to generated REPL keymaps.
-Each element is a cons cell of the form (KEY . SUFFIX).  KEY is the
-string sequence to bind.  SUFFIX is a string appended to
-`termint-REPL-NAME-' to resolve the actual command symbol (e.g.,
-\"send-defun\" becomes `termint-ipython-send-defun' when defining an
-ipython REPL).  This variable should be modified before calling
-`termint-define' to affect the generated keymaps."
-  :type '(alist :key-type string :value-type string))
 
 (defun termint--dispatch-region-and-send
     (dispatcher repl-name session source-syntax)
