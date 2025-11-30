@@ -96,6 +96,8 @@ Note that `eat' and `vterm' must be installed separately."
 (declare-function term-char-mode "term")
 (declare-function term-send-raw-string "term")
 
+
+
 (defun termint--get-session-suffix (session)
   "Return the session suffix from SESSION if interactive spec is \"P\"."
   (cond
@@ -199,8 +201,7 @@ without a number is considered as session 0."
                  #'termint--rearrange-session-on-buffer-exit
                  t)))
 
-
-
+
 
 (defun termint--send-string
     (string
@@ -388,9 +389,6 @@ before sending."
         (funcall send-string-func string session))
     (message "Invalid region from dispatcher - nothing sent to REPL")))
 
-
-
-
 (defun termint--hide-window (repl-name session)
   "Hide the REPL window.
 The target REPL buffer is specified by REPL-NAME and SESSION."
@@ -412,10 +410,7 @@ REPL-NAME."
         (replace-regexp-in-string "{{file}}" file source-syntax))
     (funcall source-syntax str)))
 
-
-
-
-
+
 
 (defmacro termint-define (repl-name repl-cmd &rest args)
   "Define a REPL schema.
@@ -718,6 +713,8 @@ ensure that the file is not deleted.  In these cases, pass
 `:source-syntax' as a function.  When the `:source-syntax' is supplied
 as a string, the temporary file will be automatically deleted
 afterward.")
+
+
 
 (defvar termint-ipython-source-syntax-template
   "%run -i \"{{file}}\""
