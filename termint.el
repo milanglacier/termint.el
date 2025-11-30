@@ -163,7 +163,6 @@ buffer name."
       ('term
        (termint--start-term-backend repl-buffer-name repl-shell session)))))
 
-
 (defun termint--rearrange-session-on-buffer-exit ()
   "Renumber sibling REPL sessions.
 This function is called after one session is killed to maintain
@@ -187,7 +186,6 @@ without a number is considered as session 0."
                    (if (eq 0 idx)
                        (rename-buffer (format "*%s*" repl-name))
                      (rename-buffer (format "*%s*<%d>" repl-name idx))))))))
-
 
 (defun termint--start-term-backend (repl-buffer-name repl-shell session)
   "Start REPL-SHELL in REPL-BUFFER-NAME with numeric SESSION with term backend."
