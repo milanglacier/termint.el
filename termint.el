@@ -352,7 +352,7 @@ invoking `termint-define` to ensure the custom commands are
 generated."
   :type '(alist :key-type string :value-type function))
 
-(defvar termint-mode-map-additional-keys
+(defcustom termint-mode-map-additional-keys
   '(("f" . "send-defun")
     ("F" . "source-defun")
     ("b" . "send-buffer")
@@ -365,7 +365,8 @@ string sequence to bind.  SUFFIX is a string appended to
 `termint-REPL-NAME-' to resolve the actual command symbol (e.g.,
 \"send-defun\" becomes `termint-ipython-send-defun' when defining an
 ipython REPL).  This variable should be modified before calling
-`termint-define' to affect the generated keymaps.")
+`termint-define' to affect the generated keymaps."
+  :type '(alist :key-type string :value-type string))
 
 (defun termint--dispatch-region-and-send
     (dispatcher repl-name session source-syntax)
