@@ -326,7 +326,7 @@ line of that matches SOURCE-COMMAND."
       (message "No defun found at point")
       nil)))
 
-(defvar termint-region-dispatchers
+(defcustom termint-region-dispatchers
   '(("paragraph" . termint--dispatch-paragraph)
     ("buffer" . termint--dispatch-buffer)
     ("defun" . termint--dispatch-defun))
@@ -337,7 +337,20 @@ to generated command names (e.g., `termint-ipython-send-NAME' and
 should be a function returning a cons cell (BEG . END) for the
 corresponding region.  Customize this before calling `termint-define'
 to generate additional region commands automatically for each REPL
-schema.")
+schema."
+  :type '(alist :key-type string :value-type function))
+
+(defcustom termint-schema-custom-commands nil
+  "Alist of extra commands generated for each REPL schema.
+Each element takes the form (SUFFIX . FN).  SUFFIX is a string
+appended to `termint-REPL-NAME-` to create the final command name for
+every schema defined via `termint-define`.  FN is the function invoked
+by the generated command.  It receives two arguments: REPL-NAME and
+SESSION.  See `termint--hide-window` for a reference implementation of
+the expected function signature.  Configure this variable before
+invoking `termint-define` to ensure the custom commands are
+generated."
+  :type '(alist :key-type string :value-type function))
 
 (defvar termint-mode-map-additional-keys
   '(("f" . "send-defun")
@@ -517,7 +530,15 @@ enabled.  The default value is nil."
                   collect (list :name region-name
                                 :dispatcher dispatcher
                                 :send send-func-name
-                                :source source-func-name))))
+                                :source source-func-name)))
+        (custom-command-definitions
+         (cl-loop for entry in termint-schema-custom-commands
+                  for name = (car entry)
+                  for func = (cdr entry)
+                  for command-name = (intern (format "termint-%s-%s" repl-name name))
+                  collect (list :name name
+                                :func func
+                                :command command-name))))
 
     `(progn
 
@@ -642,6 +663,20 @@ With numeric prefix SESSION, hide the window with that number as a
 suffix." repl-name)
          (interactive "P")
          (termint--hide-window ,repl-name session))
+
+       ,@(cl-loop for entry in custom-command-definitions append
+                  (let ((suffix (plist-get entry :name))
+                        (fn (plist-get entry :func))
+                        (command (plist-get entry :command)))
+                    (list
+                     `(defun ,command (&optional session)
+                        ,(format
+                          "Run custom command `%s' for %s.
+Generated from `termint-schema-custom-commands'.
+Calls `%S' with REPL-NAME and optional SESSION."
+                          suffix repl-name fn)
+                        (interactive "P")
+                        (funcall #',fn ,repl-name session)))))
 
        (defvar ,keymap-name
          (let ((map (make-sparse-keymap)))
