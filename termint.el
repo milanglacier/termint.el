@@ -116,9 +116,14 @@ Each element takes the form (SUFFIX . FN).  SUFFIX is a string
 appended to `termint-REPL-NAME-` to create the final command name for
 every schema defined via `termint-define`.  FN is the function invoked
 by the generated command.  It receives two arguments: REPL-NAME and
-SESSION.  See `termint--hide-window` for a reference implementation of
-the expected function signature.  Configure this variable before
-invoking `termint-define` to ensure the custom commands are
+SESSION.  See `termint--hide-window' for a reference implementation of
+the expected function signature.
+
+For example, to generate a command named `termint-ipython-hide-window`,
+add the entry `(\"hide-window\" . termint--hide-window)' to this list.
+
+Configure this variable before
+invoking `termint-define' to ensure the custom commands are
 generated."
   :type '(alist :key-type string :value-type function))
 
