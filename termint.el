@@ -114,7 +114,7 @@ schema."
   "Alist of extra commands generated for each REPL schema.
 Each element takes the form (SUFFIX . FN).  SUFFIX is a string
 appended to `termint-REPL-NAME-` to create the final command name for
-every schema defined via `termint-define`.  FN is the function invoked
+every schema defined via `termint-define'.  FN is the function invoked
 by the generated command.  It receives two arguments: REPL-NAME and
 SESSION.  See `termint--hide-window' for a reference implementation of
 the expected function signature.
