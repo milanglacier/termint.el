@@ -119,7 +119,7 @@ by the generated command.  It receives two arguments: REPL-NAME and
 SESSION.  See `termint--hide-window' for a reference implementation of
 the expected function signature.
 
-For example, to generate a command named `termint-ipython-hide-window`,
+For example, to generate a command named `termint-ipython-hide-window',
 add the entry `(\"hide-window\" . termint--hide-window)' to this list.
 
 Configure this variable before
